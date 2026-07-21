@@ -41,7 +41,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '24'
           cache: 'npm'
 
       - name: Installation des dépendances
@@ -94,6 +94,7 @@ jobs:
           path: rapport/
 
       - name: Publier le rapport dans le résumé du workflow
+            # GITHUB_STEP_SUMMARY permet d'accéder au résumé du workflow (affiché dans l'onglet Actions > Résumé)
         run: |
           echo "## 📊 Rapport de tests CucumberJS" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY

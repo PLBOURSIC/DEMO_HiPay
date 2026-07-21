@@ -5,4 +5,6 @@
 node_modules/
 
 # ajout du dossier reports pour stocker les rapports de test
-reports/
+reports/*
+# exception : le script de génération du rapport doit être versionné
+!reports/generate-report.js

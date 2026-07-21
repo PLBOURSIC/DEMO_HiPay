@@ -11,13 +11,18 @@ let dbHealth = 'UNKNOWN';
 // Vérifie la BDD avant de lancer les tests
 // ─────────────────────────────────────────
 BeforeAll(async function () {
-  const health = await checkDatabaseHealth();
-  dbHealth = health.healthCheck;
+  if (process.env.CI) {
+    console.log('⚠️  Environnement CI détecté — vérification BDD ignorée (config fictive).');
+    dbHealth = 'SKIP';
+  } else {
+    const health = await checkDatabaseHealth();
+    dbHealth = health.healthCheck;
 
-  // if (dbHealth === 'FAIL') {
-  //   throw new Error(`Impossible de lancer les tests : BDD inaccessible. ${health.error}`);
-  //   // ↑ Stoppe tous les tests si la BDD ne répond pas
-  // }
+    // if (dbHealth === 'FAIL') {
+    //   throw new Error(`Impossible de lancer les tests : BDD inaccessible. ${health.error}`);
+    //   // ↑ Stoppe tous les tests si la BDD ne répond pas
+    // }
+  }
 
   console.log('⏱️ Démarrage des tests CucumberJS...');
 });
@@ -44,6 +49,8 @@ After(async function (scenario) {
 
 // Exécuté une seule fois après TOUS les scénarios
 AfterAll(async function () {
-  await pool.end();
-  console.log('🚧 Connexion PostgreSQL fermée');
+  if (!process.env.CI) {
+    await pool.end();
+    console.log('🚧 Connexion PostgreSQL fermée');
+  }
 });
