@@ -1,0 +1,132 @@
+Stratégie : 
+
+On a pas les credentials donc il va falloir faire un cas de test directement sur le site ! Porévoir qq cas manuel et des test auto de NR à tourner tout le temps 
+
+On différencie cas au limite qui rentre dans le test de l'évolution et TNR éligible à l'automatisation 
+
+d'abords une session de cas manuel qui couvre toutes les exigences avec cas passant, non passant, aux limites
+
+Avec POST/https://cloudrun-api-yugcnet4yq-ew.a.run.app/v1/connector/order 
+Qui est l'endpoint de recette (ou tout cas l'environnement dédié au developper qui utiliser l'intégration de HiPay dans leur outils)
+
+Avec des crédentials qui utilises une basic authent login / mdp qui est encodé en base 64 
+Ce qui fait que dans le curl on a header de ce genre authorization : Basic bG9naW46cGFzc3dvcmQ=
+
+L'API est conditionné par un swagger, on doit donc vérifier qu'il le vérifie. 
+
+Pour aller plus loin = test de charge (gatling) 
+
+Pk on a pas les identifiants de la CB ? 
+
+
+Cas manuel : 
+
+01.01.CP.Cas nominal - 1 seul article 
+Création d'un ordre de paiement avec tous les éléments possibles 
+
+Vérif qu'il est bien enregistré en bdd avec les bonnes infos
+Vérif que le statut = Success
+Vérif que le receipt est en base 64 
+Vérif de la réception des notifs sur l'url https://hipay.com/notify (default set dans le back office)
+Vérif présence order id (en string) 
+Vérif présence du pricing et du montant en valeur monétaire, il doit être exprimé dans la plus petite unité de la devise (donc en centime)
+La devise doit être EUR qui respecte le format ISO 4217
+Le panier est bien présent avec ses valeurs obligatoires (vérif que discount est toujours 0 ou négatifs + vérif que le montant total du panier = unit_price * quantity - discount)
+Vérif présence du Device information et de ses identifiants = serial number (unique) et manufacter
+Vérif le terminal_transaction_display et son protocol (par défaut ConcertV3.1) ainsi que la présence du booléen
+
+01.02.CP.Cas nominal - données minimales
+Vérifier que l'on peut faire un paiement sans panier 
+Il n'est alors pas présent dans la réponse
+
+02.01.CP.Cas avec plusieurs article dans le panier 
+Utilisation des 3 enums (good, discount, fee)
+La totalité des montants correspond au montant total, avec gestion des arrondis
+
+03.01.CP.Réaliser un crédit 
+
+04.01.CP.Réaliser une annulation de débit, crédit
+
+05.01.CNP.Order avec des valeurs négatives 
+==> KO
+
+06.01.CP.Sur un paiement en statut = Failed
+Vérif statut = Failed
+Vérif code error 
+Vérif description error
+
+07.01.CNP.Url différente dans les notifications 
+A condition d'avoir un endpoint du client qui permet la reception des notif
+
+08.01.CNP.Avec des devises non conforme 
+En indiquant eur, euro ou € 
+Et avec une devise non connue
+==>KO 
+
+09.01.CP.Gestion des caractères spéciaux dans le panier et customer 
+
+
+10.01.CP.Valeur monétaire très grande
+
+10.02.CNP.Valeur non monétaire 
+Et tax_rate pas en pourcentage 
+Discount positif 
+
+Order incohérent / inconnu 
+id très long 
+inconnu
+
+11.01.CP.Avec Custom Data dans la description
+Vérification que les custom data sont bien affichés dans le HiPay back office transaction details
+
+12.01.CP.Validation format customer 
+Numero de tel au mauvais format
+Email au mauvais format
+Pas de nom
+
+13.01.CP.Vérification unicité de numéro de série du POS
+Utiliser un numéro de série déjà utilisé mais avec un autre manufacter
+
+14.01.CP.Vérification des protocol de terminal_transaction_display
+Vérifier que l'on peut indiquer les 3 enums AppNepting, ConcertV3.1, ConcertV3.2 et qu'ils sont bien présent dans la réponse
+Vérifier que l'on peut ne pas indiquer de protocol dans l'order mais que celui-ci sera renseigné avec sa valeur par défaut dans la réponse
+Vérifier qu'un protocol de paiement inconnu déclenche une erreur 
+
+
+15.01.CP.force_authorization a true ou false
+Vérification que l'on peut indiquer a true ou false le boolen force_authorization
+Si non présent l'ordre est quand même passé et absent de la réponse
+
+16.01.CP.Deux fois le même paiement 
+Même order id
+
+17.01.CNP.Injection sql, faille de sécu en tout genre 
+
+18.01.CNP.Vérification du Time out 
+Vérif qu'on doit renvoyer la réponse de succès ou erreur avant 10s. Nécessaire d'ajouter un temps d'attente dans le code ? Passer par un wiremock ?
+Dépasser ce délai on tombe en time out = 504
+
+19.01.CNP.Bad request 
+Json invalid, enum invalid, etc.
+
+20.01.CNP.Bad gateway 
+Vérification de l'erreur 502 
+Si le TPE est KO par exemple 
+The server, while acting as a gateway, received an invalid response from the POS payment terminal:
+• The POS payment terminal is shutdown
+• The POS payment terminal has no Internet access
+• The Cloud API service was not enabled in the HiPay Android app
+• The Cloud API service is stopped in the POS payment terminal
+• The POS payment terminal was not connected to the server
+• The POS payment terminal disconnected from the server after the communication started
+
+21.01.CNP.Application HiPay down 
+On doit obtenir un 500
+
+22.01.CP.Invalid credential / autorisation manquante 
+
+
+
+LE GET  : 
+
+Répond Ok code 200 ou rien
