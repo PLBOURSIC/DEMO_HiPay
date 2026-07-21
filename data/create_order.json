@@ -1,0 +1,46 @@
+{
+  "order": {
+    "order_id": "ORDER_1537532589263",
+    "transaction_type": "Debit",
+    "price": {
+      "amount": 100,
+      "currency": "EUR"
+    },
+    "basket": [
+      {
+        "product_reference": "NF-a1690",
+        "name": "My first product",
+        "type": "good",
+        "quantity": 1,
+        "unit_price": 8.99,
+        "tax_rate": 0,
+        "discount": 0,
+        "total_amount": 8.99
+      }
+    ],
+    "description": "A super short description here...",
+    "custom_data": {
+      "internal_reference": "ORD_987465",
+      "customer_first_order": true,
+      "other_sample_parameter": "Other sample value"
+    }
+  },
+  "customer": {
+    "customer_id": "283749291",
+    "email": "hipay.pos@test.com",
+    "phone": "33012345678",
+    "first_name": "Cathy",
+    "last_name": "Doe"
+  },
+  "pos_technical_info": {
+    "notify_url": "https://hipay.com/notify",
+    "device_information": {
+      "serial_number": "1850320198",
+      "manufacturer": "PAX"
+    },
+    "terminal_transaction_display": {
+      "protocol": "AppNepting",
+      "force_authorization": true
+    }
+  }
+}

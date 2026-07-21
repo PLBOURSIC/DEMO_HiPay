@@ -1,0 +1,5 @@
+# ajout du dossier .env pour stocker les variables d'environnement
+.env
+
+# ajout du dossier node_modules pour stocker les dépendances du projet
+node_modules/

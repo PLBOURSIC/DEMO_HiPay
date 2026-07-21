@@ -1,0 +1,13 @@
+{
+  "cucumber.features": [
+    "features/**/*.feature",
+    "test/**/*.feature"
+  ],
+  "cucumber.glue": [
+    "features/step_definitions/**/*.js",
+    "features/step_definitions/**/*.ts"
+  ],
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": true
+  }
+}
