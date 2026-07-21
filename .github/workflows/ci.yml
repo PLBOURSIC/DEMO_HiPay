@@ -48,9 +48,12 @@ jobs:
         run: npm ci
 
       - name: Lancer les tests CucumberJS
+        # Utilise run-tests.js dans tous les cas : il génère toujours le rapport,
+        # même si des tests échouent (exit code non-zéro), puis propage le code de sortie.
         run: |
-          if [ -n "${{ github.event.inputs.feature }}" ]; then
-            npx cucumber-js "features/${{ github.event.inputs.feature }}" --format json:reports/cucumber.json && node reports/generate-report.js
+          FEATURE="${{ github.event.inputs.feature }}"
+          if [ -n "$FEATURE" ]; then
+            node features/support-scripts/run-tests.js "features/$FEATURE"
           else
             npm test
           fi
@@ -61,6 +64,14 @@ jobs:
           PWS_BDD: ${{ secrets.PWS_BDD }}
           CI: true
 
+      - name: Upload résultats bruts (JSON)
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: cucumber-json-${{ github.run_number }}
+          path: reports/cucumber.json
+          retention-days: 7
+
       - name: Upload rapport HTML
         uses: actions/upload-artifact@v4
         if: always()
@@ -69,10 +80,37 @@ jobs:
           path: reports/cucumber-report.html
           retention-days: 30
 
-      - name: Upload rapport JSON (debug)
-        uses: actions/upload-artifact@v4
-        if: always()
+  publish-report:
+    runs-on: ubuntu-latest
+    needs: cucumber-tests
+    # Toujours exécuté (même si les tests échouent), sauf si le job principal a été ignoré
+    if: always() && needs.cucumber-tests.result != 'skipped'
+
+    steps:
+      - name: Télécharger le rapport HTML
+        uses: actions/download-artifact@v4
         with:
-          name: cucumber-json-${{ github.run_number }}
-          path: reports/cucumber.json
-          retention-days: 7
+          name: cucumber-report-${{ github.run_number }}
+          path: rapport/
+
+      - name: Publier le rapport dans le résumé du workflow
+        run: |
+          echo "## 📊 Rapport de tests CucumberJS" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Run :** \`#${{ github.run_number }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Le rapport HTML complet est disponible dans les **Artifacts** de ce workflow :" >> $GITHUB_STEP_SUMMARY
+          echo "➡️ \`cucumber-report-${{ github.run_number }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ needs.cucumber-tests.result }}" = "success" ]; then
+            echo "✅ Tous les tests ont réussi." >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ Des tests ont échoué — consultez le rapport pour les détails." >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Upload rapport HTML (depuis publish-report)
+        uses: actions/upload-artifact@v4
+        with:
+          name: rapport-final-${{ github.run_number }}
+          path: rapport/cucumber-report.html
+          retention-days: 30
