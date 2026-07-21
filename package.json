@@ -3,11 +3,12 @@
   "version": "1.0.0",
   "description": "Tests automatisés HiPay avec Cucumber",
   "scripts": {
-    "test": "cucumber-js --format json:reports/cucumber.json && node reports/generate-report.js",
-    "test:cas_nominal_OK": "cucumber-js features/cas_nominal_OK.feature --format json:reports/cucumber.json && node reports/generate-report.js",
-    "test:authentification_KO": "cucumber-js features/authentification_KO.feature --format json:reports/cucumber.json && node reports/generate-report.js",
-    "test:all": "cucumber-js features/**/*.feature --format json:reports/cucumber.json && node reports/generate-report.js",
-    "test:smoke": "cucumber-js --tags @smoke --format json:reports/cucumber.json && node reports/generate-report.js"
+    "test": "node features/support-scripts/run-tests.js",
+    "report": "node reports/generate-report.js",
+    "test:cas_nominal_OK": "node features/support-scripts/run-tests.js features/cas_nominal_OK.feature",
+    "test:authentification_KO": "node features/support-scripts/run-tests.js features/Authentification_KO.feature",
+    "test:all": "node features/support-scripts/run-tests.js features/",
+    "test:smoke": "node features/support-scripts/run-tests.js --tags @smoke"
   },
   "dependencies": {
     "pg": "^8.11.0"

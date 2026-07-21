@@ -8,6 +8,6 @@
     "features/step_definitions/**/*.ts"
   ],
   "editor.codeActionsOnSave": {
-    "source.fixAll.eslint": true
+    "source.fixAll.eslint": "explicit"
   }
 }

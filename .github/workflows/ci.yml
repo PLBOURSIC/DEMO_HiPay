@@ -76,5 +76,3 @@ jobs:
           name: cucumber-json-${{ github.run_number }}
           path: reports/cucumber.json
           retention-days: 7
-</parameter>
-</invoke>
