@@ -1,6 +1,27 @@
-name: Tests CucumberJS
+name: Tests CucumberJS - API Paiement HiPay
 
 on:
+  # Déclenchement manuel depuis l'onglet Actions (avec option pour désactiver)
+  workflow_dispatch:
+    inputs:
+      skip_tests:
+        description: 'Désactiver les tests (true = ne pas exécuter)'
+        required: false
+        default: 'false'
+        type: choice
+        options:
+          - 'false'
+          - 'true'
+      feature:
+        description: 'Feature à jouer (laisser vide = toutes)'
+        required: false
+        default: ''
+
+  # Planification quotidienne à 9h00 (UTC+2 Paris = 07:00 UTC)
+  schedule:
+    - cron: '0 7 * * *'
+
+  # Sur push / PR (optionnel, peut être retiré pour ne garder que le schedule)
   push:
     branches: [main, develop]
   pull_request:
@@ -8,23 +29,52 @@ on:
 
 jobs:
   cucumber-tests:
-    runs-on: ubuntu-latest  # Runner GitHub avec Node.js dispo nativement
+    runs-on: ubuntu-latest
+
+    # Condition globale : ne pas tourner si skip_tests=true (déclenchement manuel)
+    if: ${{ github.event.inputs.skip_tests != 'true' }}
 
     steps:
       - name: Checkout du code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '20'
           cache: 'npm'
 
       - name: Installation des dépendances
         run: npm ci
 
       - name: Lancer les tests CucumberJS
-        run: npm test
-        # ou : npx cucumber-js
+        run: |
+          if [ -n "${{ github.event.inputs.feature }}" ]; then
+            npx cucumber-js "features/${{ github.event.inputs.feature }}" --format json:reports/cucumber.json && node reports/generate-report.js
+          else
+            npm test
+          fi
+        env:
+          API_username: ${{ secrets.API_USERNAME }}
+          API_password: ${{ secrets.API_PASSWORD }}
+          LOGIN_BDD: ${{ secrets.LOGIN_BDD }}
+          PWS_BDD: ${{ secrets.PWS_BDD }}
+          CI: true
+
+      - name: Upload rapport HTML
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: cucumber-report-${{ github.run_number }}
+          path: reports/cucumber-report.html
+          retention-days: 30
+
+      - name: Upload rapport JSON (debug)
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: cucumber-json-${{ github.run_number }}
+          path: reports/cucumber.json
+          retention-days: 7
 </parameter>
 </invoke>

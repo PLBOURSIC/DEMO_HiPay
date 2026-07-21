@@ -3,3 +3,6 @@
 
 # ajout du dossier node_modules pour stocker les dépendances du projet
 node_modules/
+
+# ajout du dossier reports pour stocker les rapports de test
+reports/

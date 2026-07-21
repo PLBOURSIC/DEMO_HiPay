@@ -1,6 +1,6 @@
 {
   "order": {
-    "order_id": "ORDER_1537532589263",
+    "order_id": "order_id",
     "transaction_type": "Debit",
     "price": {
       "amount": 100,

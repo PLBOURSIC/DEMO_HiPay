@@ -27,11 +27,5 @@ Then('les notifications ont été reçues sur l\'url notify', async function () 
   expect(notifResult.rows.length, 'La notification doit avoir été reçue').to.be.greaterThan(0);
 });
 
-// Supprime les données de test après chaque scénario
-Then('je purge la bdd pour eviter de l\'encombrer', async function () {
-  const orderId = this.body.order.order_id;
-  await pool.query('DELETE FROM orders WHERE order_id = $1', [orderId]);
-});
-
 
 

@@ -1,3 +1,4 @@
+@smoke @creation_order @regression
 Feature: Cas nominal creation order
 
   En tant qu'utilisateur
@@ -11,4 +12,3 @@ Feature: Cas nominal creation order
     And l'enregistrement avec l'order_id existe en base
     And les notifications ont été reçues sur l'url notify
     And je vérifie que la réponse respecte le schéma JSON attendu
-    After je purge la bdd pour eviter de l'encombrer
