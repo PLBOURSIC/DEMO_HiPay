@@ -147,13 +147,8 @@ si on veut aller plus loin en testant l'API avec son code on peut dockeriser ave
 Comment fonctionne CucumberJS ?
 CucumberJS est un framework de tests BDD (Behavior Driven Development). L'idée est d'écrire les tests dans un langage naturel compréhensible par tout le monde (développeurs, testeurs, métier).
 
+Les mots-clés Gherkin : 
 
-
-
-
-
-
-📌 Les mots-clés Gherkin
 Mot-clé	Rôle
 Feature	Décrit la fonctionnalité testée
 Scenario	Un cas de test
@@ -163,3 +158,30 @@ When	Action effectuée
 Then	Résultat attendu
 And / But	Enchaîner des étapes
 Examples	Tableau de données pour Scenario Outline
+
+
+quels sont les cas de test éligible au test auto : 
+
+01.01.CP.Cas nominal - 1 seul article 
+
+01.02.CP.Cas nominal - sans panier
+
+02.01.CP.Cas avec plusieurs article dans le panier (a fusionner avec le premier ?)
+
+03.01.CP.Réaliser un crédit 
+
+04.01.CP.Réaliser une annulation de débit, crédit
+
+06.01.CP.Sur un paiement en statut = Failed
+
+11.01.CP.Avec Custom Data dans la description
+
+13.01.CP.Vérification unicité de numéro de série du POS
+
+16.01.CP.Deux fois le même paiement 
+
+22.01.CP.Invalid credential / autorisation manquante 
+
+
+
+

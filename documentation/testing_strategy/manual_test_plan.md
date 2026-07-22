@@ -11,33 +11,33 @@
 
 ## Sommaire
 
-| # | Identifiant | Intitulé | Type | Statut |
+| # | Identifiant | Intitulé | Type |
 |---|---|---|---|---|
-| 1 | 01.01.CP | Cas nominal — 1 seul article | CP | ⬜ |
-| 2 | 01.02.CP | Cas nominal — données minimales (sans panier) | CP | ⬜ |
-| 3 | 02.01.CP | Plusieurs articles dans le panier | CP | ⬜ |
-| 4 | 03.01.CP | Réaliser un crédit | CP | ⬜ |
-| 5 | 04.01.CP | Annulation de débit / crédit | CP | ⬜ |
-| 6 | 05.01.CNP | Order avec des valeurs négatives | CNP | ⬜ |
-| 7 | 06.01.CP | Paiement en statut Failed | CP | ⬜ |
-| 8 | 07.01.CNP | URL différente dans les notifications | CNP | ⬜ |
-| 9 | 08.01.CNP | Devises non conformes | CNP | ⬜ |
-| 10 | 09.01.CP | Gestion des caractères spéciaux | CP | ⬜ |
-| 11 | 10.01.CP | Valeur monétaire très grande | CP | ⬜ |
-| 12 | 10.02.CNP | Valeur non monétaire / tax_rate / discount incohérents | CNP | ⬜ |
-| 13 | 10.03.CNP | Order incohérent / inconnu | CNP | ⬜ |
-| 14 | 11.01.CP | Custom Data dans la description | CP | ⬜ |
-| 15 | 12.01.CP | Validation format customer | CP | ⬜ |
-| 16 | 13.01.CP | Unicité numéro de série du POS | CP | ⬜ |
-| 17 | 14.01.CP | Protocoles terminal_transaction_display | CP | ⬜ |
-| 18 | 15.01.CP | force_authorization à true ou false | CP | ⬜ |
-| 19 | 16.01.CP | Deux fois le même paiement (même order_id) | CP | ⬜ |
-| 20 | 17.01.CNP | Injection SQL et failles de sécurité | CNP | ⬜ |
-| 21 | 18.01.CNP | Vérification du timeout | CNP | ⬜ |
-| 22 | 19.01.CNP | Bad Request | CNP | ⬜ |
-| 23 | 20.01.CNP | Bad Gateway | CNP | ⬜ |
-| 24 | 21.01.CNP | Application HiPay down | CNP | ⬜ |
-| 25 | 22.01.CNP | Invalid credential / autorisation manquante | CNP | ⬜ |
+| 1 | 01.01.CP | Cas nominal — 1 seul article | CP |
+| 2 | 01.02.CP | Cas nominal — données minimales (sans panier) | CP |
+| 3 | 02.01.CP | Plusieurs articles dans le panier | CP |
+| 4 | 03.01.CP | Réaliser un crédit | CP |
+| 5 | 04.01.CP | Annulation de débit / crédit | CP |
+| 6 | 05.01.CNP | Order avec des valeurs négatives | CNP |
+| 7 | 06.01.CP | Paiement en statut Failed | CP |
+| 8 | 07.01.CNP | URL différente dans les notifications | CNP |
+| 9 | 08.01.CNP | Devises non conformes | CNP |
+| 10 | 09.01.CP | Gestion des caractères spéciaux | CP |
+| 11 | 10.01.CP | Valeur monétaire très grande | CP |
+| 12 | 10.02.CNP | Valeur non monétaire / tax_rate / discount incohérents | CNP |
+| 13 | 10.03.CNP | Order incohérent / inconnu | CNP |
+| 14 | 11.01.CP | Custom Data dans la description | CP |
+| 15 | 12.01.CP | Validation format customer | CP |
+| 16 | 13.01.CP | Unicité numéro de série du POS | CP |
+| 17 | 14.01.CP | Protocoles terminal_transaction_display | CP |
+| 18 | 15.01.CP | force_authorization à true ou false | CP |
+| 19 | 16.01.CP | Deux fois le même paiement (même order_id) | CP |
+| 20 | 17.01.CNP | Injection SQL et failles de sécurité | CNP |
+| 21 | 18.01.CNP | Vérification du timeout | CNP |
+| 22 | 19.01.CNP | Bad Request | CNP |
+| 23 | 20.01.CNP | Bad Gateway | CNP |
+| 24 | 21.01.CNP | Application HiPay down | CNP |
+| 25 | 22.01.CNP | Invalid credential / autorisation manquante | CNP |
 
 ---
 
@@ -76,7 +76,7 @@ Utiliser le body complet de [`data/create_order.json`](../../data/create_order.j
 
 > **Objectif** : Vérifier qu'un paiement peut être effectué sans fournir de panier.
 
-**Priorité** : 🟡 Majeure | **Type** : CP
+**Type** : Cas Passant
 
 #### Données modifiées
 
@@ -93,18 +93,17 @@ Supprimer le champ `basket` du body envoyé.
 ## 02.01.CP — Plusieurs articles dans le panier
 
 > **Objectif** : Vérifier le traitement d'un panier multi-articles utilisant les 3 types d'articles possibles.
-
-**Priorité** : 🟡 Majeure | **Type** : CP
+**Type** : Cas Passant
 
 #### Données modifiées
 
 Fournir un panier avec au moins 3 articles utilisant les enums de type :
 
-| `type` | Description |
-|---|---|
-| `good` | Article physique |
-| `discount` | Remise |
-| `fee` | Frais additionnels |
+| `type` |
+|---|
+| `good` |
+| `discount` |
+| `fee` |
 
 #### Résultats attendus
 
@@ -118,7 +117,7 @@ Fournir un panier avec au moins 3 articles utilisant les enums de type :
 
 > **Objectif** : Vérifier que l'API accepte une transaction de type `Credit`.
 
-**Priorité** : 🟡 Majeure | **Type** : CP
+**Type** : Cas Passant
 
 #### Données modifiées
 
@@ -138,7 +137,7 @@ Fournir un panier avec au moins 3 articles utilisant les enums de type :
 
 > **Objectif** : Vérifier que l'API accepte une transaction de type `Cancel` (annulation d'un débit ou d'un crédit précédent).
 
-**Priorité** : 🟡 Majeure | **Type** : CP
+**Type** : Cas Passant
 
 #### Prérequis
 
@@ -155,7 +154,7 @@ Un ordre de débit ou de crédit préalablement créé (récupérer son `order_i
 
 > **Objectif** : Vérifier que l'API rejette un order contenant des valeurs négatives.
 
-**Priorité** : 🟡 Majeure | **Type** : CNP
+**Type** : Cas Non Passant
 
 #### Données modifiées
 
@@ -173,13 +172,9 @@ Un ordre de débit ou de crédit préalablement créé (récupérer son `order_i
 
 ## 06.01.CP — Paiement en statut Failed
 
-> **Objectif** : Vérifier le comportement de l'API lorsque le paiement est refusé par le TPE.
+> **Objectif** : Vérifier le comportement de l'API lorsque le paiement est refusé par le TPE, carte invalide, etc.
 
-**Priorité** : 🟡 Majeure | **Type** : CP
-
-#### Prérequis
-
-Simuler un refus de paiement (carte refusée, TPE KO, etc.).
+**Type** : Cas Passant
 
 #### Résultats attendus
 
@@ -190,20 +185,20 @@ Simuler un refus de paiement (carte refusée, TPE KO, etc.).
 
 ---
 
-## 07.01.CNP — URL différente dans les notifications
+## 07.01.CP — URL différente dans les notifications
 
 > **Objectif** : Vérifier que les notifications sont bien envoyées vers une URL personnalisée différente de celle du back office.
 
-**Priorité** : 🟠 Mineure | **Type** : CNP
+**Type** : Cas Passant
 
 #### Prérequis
 
-Disposer d'un endpoint client capable de recevoir les notifications (ex. : Webhook.site, WireMock).
+Disposer d'un endpoint client capable de recevoir les notifications.
 
 #### Données modifiées
 
 ```json
-"notify_url": "https://mon-endpoint-custom.exemple.com/notify"
+"notify_url": "https://mon-endpoint-custom/notify"
 ```
 
 #### Résultats attendus
@@ -217,7 +212,7 @@ Disposer d'un endpoint client capable de recevoir les notifications (ex. : Webho
 
 > **Objectif** : Vérifier que les devises mal formatées ou non supportées sont rejetées.
 
-**Priorité** : 🟡 Majeure | **Type** : CNP
+**Type** : Cas Non Passant
 
 #### Jeux de données à tester
 
@@ -240,7 +235,7 @@ Disposer d'un endpoint client capable de recevoir les notifications (ex. : Webho
 
 > **Objectif** : Vérifier que l'API gère correctement les caractères spéciaux dans les champs texte.
 
-**Priorité** : 🟠 Mineure | **Type** : CP
+**Type** : Cas Passant
 
 #### Données modifiées
 
@@ -256,7 +251,7 @@ Utiliser des caractères spéciaux dans les champs suivants :
 #### Résultats attendus
 
 - [ ] Statut HTTP : **200 OK**
-- [ ] Les caractères spéciaux sont correctement persistés en base et retournés dans la réponse
+- [ ] Les caractères spéciaux sont correctement persistés en base et retournés dans la réponse car ce sont des strings
 
 ---
 
@@ -264,7 +259,7 @@ Utiliser des caractères spéciaux dans les champs suivants :
 
 > **Objectif** : Tester le comportement de l'API avec un montant extrêmement élevé.
 
-**Priorité** : 🟠 Mineure | **Type** : CP
+**Type** : Cas Passant
 
 #### Données modifiées
 
@@ -283,7 +278,7 @@ Utiliser des caractères spéciaux dans les champs suivants :
 
 > **Objectif** : Vérifier la validation des règles de cohérence du panier.
 
-**Priorité** : 🟡 Majeure | **Type** : CNP
+**Type** : Cas Non Passant
 
 #### Jeux de données à tester
 
@@ -300,18 +295,22 @@ Utiliser des caractères spéciaux dans les champs suivants :
 
 ---
 
-## 10.03.CNP — Order incohérent / inconnu
+## 10.03.CNP — Order incohérent
 
-> **Objectif** : Tester la robustesse de l'API face à des `order_id` mal formés ou inexistants.
+> **Objectif** : Tester la robustesse de l'API face à des `order_id` mal formés.
 
-**Priorité** : 🟠 Mineure | **Type** : CNP
+**Type** : Cas Non Passant
+
+#### Prérequis
+
+Uniquement si il existe une règle de formatage de l'order_id, dans le swagger il est indiqué en {string}
 
 #### Jeux de données à tester
 
 | Scénario | `order_id` |
 |---|---|
 | Identifiant très long | Chaîne de 500 caractères |
-| Identifiant inconnu (annulation) | `"ORDER_INEXISTANT_999"` |
+| Identifiant inconnu (annulation) | `"coucou"` |
 
 #### Résultats attendus
 
@@ -323,7 +322,7 @@ Utiliser des caractères spéciaux dans les champs suivants :
 
 > **Objectif** : Vérifier que les données personnalisées (`custom_data`) sont bien visibles dans le back office HiPay.
 
-**Priorité** : 🟠 Mineure | **Type** : CP
+**Type** : Cas Passant
 
 #### Données modifiées
 
@@ -346,7 +345,7 @@ Utiliser des caractères spéciaux dans les champs suivants :
 
 > **Objectif** : Vérifier que l'API valide les formats des données client.
 
-**Priorité** : 🟡 Majeure | **Type** : CP
+**Type** : Cas Passant
 
 #### Jeux de données à tester
 
@@ -362,7 +361,7 @@ Utiliser des caractères spéciaux dans les champs suivants :
 
 > **Objectif** : Vérifier qu'un même numéro de série associé à un fabricant différent est accepté ou rejeté.
 
-**Priorité** : 🟠 Mineure | **Type** : CP
+**Type** : Cas Passant
 
 #### Données modifiées
 
@@ -377,7 +376,7 @@ Utiliser un `serial_number` déjà utilisé dans un ordre précédent mais avec 
 
 #### Résultats attendus
 
-- [ ] Documenter si l'API accepte la combinaison `serial_number` + `manufacturer` différent
+- [ ] Statut HTTP : **4xx** avec message explicite
 
 ---
 
@@ -385,7 +384,7 @@ Utiliser un `serial_number` déjà utilisé dans un ordre précédent mais avec 
 
 > **Objectif** : Vérifier le comportement de l'API pour chacun des protocoles supportés.
 
-**Priorité** : 🟡 Majeure | **Type** : CP
+**Type** : Cas Passant
 
 #### Jeux de données à tester
 
@@ -403,7 +402,7 @@ Utiliser un `serial_number` déjà utilisé dans un ordre précédent mais avec 
 
 > **Objectif** : Vérifier le comportement du booléen `force_authorization`.
 
-**Priorité** : 🟠 Mineure | **Type** : CP
+**Type** : Cas Passant
 
 #### Jeux de données à tester
 
@@ -419,7 +418,7 @@ Utiliser un `serial_number` déjà utilisé dans un ordre précédent mais avec 
 
 > **Objectif** : Vérifier le comportement de l'API lorsqu'un `order_id` déjà traité est renvoyé.
 
-**Priorité** : 🟡 Majeure | **Type** : CP
+**Type** : Cas Passant
 
 #### Étapes
 
@@ -428,7 +427,7 @@ Utiliser un `serial_number` déjà utilisé dans un ordre précédent mais avec 
 
 #### Résultats attendus
 
-- [ ] Documenter le comportement : idempotence (200 avec même réponse) ou rejet (4xx — doublon)
+- rejet : code 4xx et message d'erreur de doublon
 
 ---
 
@@ -436,7 +435,7 @@ Utiliser un `serial_number` déjà utilisé dans un ordre précédent mais avec 
 
 > **Objectif** : Vérifier que l'API résiste aux tentatives d'injection et d'exploitation.
 
-**Priorité** : 🔴 Critique | **Type** : CNP
+**Type** : Cas Non Passant
 
 #### Jeux de données à tester (dans les champs texte)
 
@@ -459,7 +458,7 @@ Utiliser un `serial_number` déjà utilisé dans un ordre précédent mais avec 
 
 > **Objectif** : Vérifier que l'API renvoie une erreur si le TPE ne répond pas dans les délais.
 
-**Priorité** : 🟡 Majeure | **Type** : CNP
+**Type** : Cas Non Passant
 
 #### Prérequis
 
@@ -476,7 +475,7 @@ Simuler un TPE lent via WireMock ou en introduisant un délai artificiel dans le
 
 > **Objectif** : Vérifier le rejet de requêtes malformées.
 
-**Priorité** : 🟡 Majeure | **Type** : CNP
+**Type** : Cas Non Passant
 
 #### Jeux de données à tester
 
@@ -498,21 +497,19 @@ Simuler un TPE lent via WireMock ou en introduisant un délai artificiel dans le
 
 > **Objectif** : Vérifier le comportement de l'API lorsque le TPE est inaccessible.
 
-**Priorité** : 🟡 Majeure | **Type** : CNP
+**Type** : Cas Non Passant
 
 #### Cas de figure à couvrir
 
 - TPE éteint
 - TPE sans accès Internet
-- Service Cloud API non activé dans l'app HiPay Android
-- Service Cloud API arrêté sur le TPE
 - TPE non connecté au serveur
 - TPE déconnecté en cours de communication
 
 #### Résultats attendus
 
 - [ ] Statut HTTP : **502 Bad Gateway**
-- [ ] Message : _"The server, while acting as a gateway, received an invalid response from the POS payment terminal"_
+- [ ] Message d'erreur attendu
 
 ---
 
@@ -520,7 +517,7 @@ Simuler un TPE lent via WireMock ou en introduisant un délai artificiel dans le
 
 > **Objectif** : Vérifier le comportement lorsque le service HiPay est indisponible.
 
-**Priorité** : 🟡 Majeure | **Type** : CNP
+**Type** : Cas Non Passant
 
 #### Résultats attendus
 
@@ -533,7 +530,7 @@ Simuler un TPE lent via WireMock ou en introduisant un délai artificiel dans le
 
 > **Objectif** : Vérifier que l'authentification est obligatoire et que les credentials invalides sont rejetés.
 
-**Priorité** : 🔴 Critique | **Type** : CNP
+**Type** : Cas Non Passant
 
 #### Jeux de données à tester
 
@@ -541,8 +538,7 @@ Simuler un TPE lent via WireMock ou en introduisant un délai artificiel dans le
 |---|---|---|
 | Header absent | _(absent)_ | 401 — `"Invalid authorization header"` |
 | Credentials invalides | `Basic <base64(wronglogin:wrongpassword)>` | 401 — `"invalid credentials"` |
-| Token malformé | `Basic NOTBASE64!!!` | 401 — message d'erreur |
-| Schéma incorrect | `Bearer <token>` | 401 — schéma non supporté |
+| Token malformé | `Basic NOTBASE64!!!` | 401 — `"Invalid authorization header" |
 
 #### Résultats attendus (pour chaque cas)
 
