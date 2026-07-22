@@ -44,7 +44,7 @@
 
 > **Objectif** : Création d'un ordre de paiement avec tous les éléments possibles et vérification complète de la réponse.
 
-**Priorité** : 🔴 Critique | **Type** : CP
+**Type** : Cas Passant
 
 #### Données d'entrée
 

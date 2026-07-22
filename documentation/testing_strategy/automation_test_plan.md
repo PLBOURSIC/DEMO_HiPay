@@ -45,20 +45,20 @@ Pour les cas automatisés, vérifier selon le scénario :
 
 ## Priorités de mise en oeuvre
 
-1. Priorité 1
-Cas nominal - 1 seul article
-Deux fois le même paiement (même order_id)
-Credentials invalides / autorisation manquante
+1. Priorité 1 :
+    - Cas nominal - 1 seul article
+    - Deux fois le même paiement (même order_id)
+    - Credentials invalides / autorisation manquante
 
-2. Priorité 2
-Cas avec plusieurs articles dans le panier
-Cas nominal - sans panier
-Paiement avec statut Failed
-Réaliser un crédit
-Réaliser une annulation de débit/crédit
+2. Priorité 2 :
+   - Cas avec plusieurs articles dans le panier
+   - Cas nominal - sans panier
+   - Paiement avec statut Failed
+   - Réaliser un crédit
+   - Réaliser une annulation de débit/crédit
 
-3. Priorité 3
-Custom Data dans la description
-Unicité du numéro de série POS
+3. Priorité 3 :
+   - Custom Data dans la description
+   - Unicité du numéro de série POS
 
 

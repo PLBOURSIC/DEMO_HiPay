@@ -2,7 +2,7 @@
 
 ## Contexte et contraintes
 
-HiPay expose son API via un contrat Swagger et communique avec des outils qui fonctionnent nativement avec **Gherkin**, **JavaScript** et **TypeScript**.
+HiPay expose son API via un contrat Swagger et communique avec des outils qui fonctionnent nativement **JavaScript**, les bibliotheques de test présentes semblent fonntionner avec du Gherkin (indiqué dans l'énoncé).
 
 Il fallait donc un langage qui :
 - permet d'écrire des scénarios Gherkin lisibles par des non-développeurs (PO, testeurs métier)
@@ -16,11 +16,7 @@ Il fallait donc un langage qui :
 
 Après recherches, la solution **CucumberJS** ([@cucumber/cucumber](https://github.com/cucumber/cucumber-js)) sur **Node.js** a été retenue comme la plus adaptée.
 
-### Pourquoi JavaScript plutôt que TypeScript ?
-
-TypeScript aurait apporté la sécurité du typage statique, mais au prix d'une configuration supplémentaire (`tsconfig.json`, transpilation, `ts-node`). Pour un projet de démonstration orienté tests API, JavaScript suffit et réduit la friction à l'entrée.
-
-### Pourquoi CucumberJS plutôt qu'une alternative ?
+### Pourquoi CucumberJS plutôt qu'une alternative connue ?
 
 | Critère | CucumberJS | Robot Framework | Playwright Test | Jest |
 |---|---|---|---|---|
@@ -28,9 +24,8 @@ TypeScript aurait apporté la sécurité du typage statique, mais au prix d'une 
 | Écosystème JS | ✅ | ❌ (Python) | ✅ | ✅ |
 | Rapport HTML natif | ✅ | ✅ | ✅ | ❌ |
 | Adapté tests API REST | ✅ | ✅ | ✅ | ✅ |
-| Courbe d'apprentissage | Faible | Moyenne | Faible | Faible |
 
-CucumberJS est **l'unique solution** qui réunit Gherkin natif + écosystème JS + rapport HTML sans couche d'adaptation.
+CucumberJS est **une solution** qui réunit Gherkin natif + écosystème JS + rapport HTML sans couche d'adaptation.
 
 ---
 
@@ -93,25 +88,6 @@ Le rapport est **toujours généré**, même si des tests échouent.
 
 Sur Windows, l'opérateur `||` utilisé pour forcer la génération du rapport après un échec n'est pas reconnu dans `npm scripts`. Un script Node.js dédié (`features/support-scripts/run-tests.js`) a été créé pour contourner ce problème. Il utilise `spawnSync` pour lancer CucumberJS puis appelle `generate-report.js` inconditionnellement avant de propager le code de sortie vers la CI.
 
-### Type de paramètre `{boolean}`
-
-CucumberJS ne reconnaît pas nativement `true` / `false` (sans guillemets) dans les phrases Gherkin.  
-Un type de paramètre personnalisé est déclaré dans `features/support/parameter_types.js` :
-
-```js
-defineParameterType({
-  name: 'boolean',
-  regexp: /true|false/,
-  transformer: (s) => s === 'true',
-});
-```
-
-Cela permet d'écrire dans une `.feature` :
-
-```gherkin
-When je soumets la requête ... avec une authorization invalide présente true
-```
-
 ### Gestion des secrets
 
 Les credentials (API HiPay et base de données) ne sont jamais écrits en clair dans le code.  
@@ -121,22 +97,4 @@ Ils sont injectés via :
 
 ---
 
-## Pipeline CI/CD (GitHub Actions)
 
-Le workflow `.github/workflows/ci.yml` est déclenché :
-
-| Déclencheur | Détail |
-|---|---|
-| **Planification quotidienne** | Tous les jours à **9h00 (Paris)** — `cron: '0 7 * * *'` |
-| **Push** | Sur les branches `main` et `develop` |
-| **Pull Request** | Vers `main` |
-| **Manuel** | Depuis l'onglet GitHub Actions — avec option pour cibler une feature précise ou désactiver les tests |
-
-Le pipeline :
-1. Installe Node.js 24 et les dépendances (`npm ci`)
-2. Exécute les tests (feature complète ou ciblée)
-3. Génère le rapport HTML
-4. Uploade les artefacts (JSON brut conservé 7 jours, rapport HTML conservé 30 jours)
-5. Publie le rapport HTML sur **GitHub Pages** (job `publish-report`)
-
-> La variable `CI=true` est injectée automatiquement pour désactiver la vérification BDD et l'ouverture automatique du rapport dans le navigateur.
