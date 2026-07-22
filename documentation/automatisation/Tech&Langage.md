@@ -59,7 +59,7 @@ DEMO_Hipay/
 
 | Package | Version | Rôle |
 |---|---|---|
-| `pg` | ^8.11.0 | Connexion PostgreSQL — vérification des données en base |
+| `pg` | ^8.11.0 | Connexion BDD — vérification des données en base |
 
 ### Développement
 
@@ -87,6 +87,14 @@ Le rapport est **toujours généré**, même si des tests échouent.
 ### Runner cross-platform (`run-tests.js`)
 
 Sur Windows, l'opérateur `||` utilisé pour forcer la génération du rapport après un échec n'est pas reconnu dans `npm scripts`. Un script Node.js dédié (`features/support-scripts/run-tests.js`) a été créé pour contourner ce problème. Il utilise `spawnSync` pour lancer CucumberJS puis appelle `generate-report.js` inconditionnellement avant de propager le code de sortie vers la CI.
+
+### Connexion centralisée API et BDD (`Connexion_param.js`)
+
+Le fichier `environment/Connexion_param.js` centralise les accès techniques utilisés par les steps :
+- `API_CREDENTIAL` construit le header Basic Auth de l'API à partir de `API_username` et `API_password` (encodage Base64).
+- `pool` initialise une connexion BDD mutualisée (package `pg`) avec `LOGIN_BDD` et `PWS_BDD`.
+
+Permet d'éviter de dupliquer la logique de connexion dans chaque step.
 
 ### Gestion des secrets
 

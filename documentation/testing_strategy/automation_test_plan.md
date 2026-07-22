@@ -43,6 +43,17 @@ Pour les cas automatisés, vérifier selon le scénario :
 - Exécution CI quotidienne et sur push/PR.
 - Rapport HTML généré systématiquement.
 
+## Rôle des hooks
+
+Les hooks Cucumber servent à préparer et nettoyer l'exécution des tests autour des scénarios.
+
+- BeforeAll: initialise le contexte global et vérifie l'état de la BDD (hors CI).
+- Before: journalise le démarrage de chaque scénario.
+- After: purge les données créées pendant le scénario (exemple: order_id) pour éviter les effets de bord.
+- AfterAll: ferme proprement les connexions (pool PostgreSQL) en fin de campagne.
+
+Implémentation: voir features/step_definitions/hook.js.
+
 ## Priorités de mise en oeuvre
 
 1. Priorité 1 :
