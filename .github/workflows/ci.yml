@@ -1,17 +1,17 @@
 name: Tests CucumberJS - API Paiement HiPay
 
 on:
-  # Déclenchement manuel depuis l'onglet Actions (avec option pour désactiver)
+  # Déclenchement manuel depuis l'onglet Actions
   workflow_dispatch:
     inputs:
-      skip_tests:
-        description: 'Désactiver les tests (true = ne pas exécuter)'
+      env:
+        description: 'Environnement cible'
         required: false
-        default: 'false'
+        default: 'Recette1'
         type: choice
         options:
-          - 'false'
-          - 'true'
+          - 'Recette1'
+          - 'Recette2'
       feature:
         description: 'Feature à jouer (laisser vide = toutes)'
         required: false
@@ -31,8 +31,9 @@ jobs:
   cucumber-tests:
     runs-on: ubuntu-latest
 
-    # Condition globale : ne pas tourner si skip_tests=true (déclenchement manuel)
-    if: ${{ github.event.inputs.skip_tests != 'true' }}
+    # Environnement cible (Recette1 par défaut si déclenchement automatique)
+    env:
+      TARGET_ENV: ${{ github.event.inputs.env || 'Recette1' }}
 
     steps:
       - name: Checkout du code
@@ -58,10 +59,11 @@ jobs:
             npm test
           fi
         env:
-          API_username: ${{ secrets.API_USERNAME }}
-          API_password: ${{ secrets.API_PASSWORD }}
-          LOGIN_BDD: ${{ secrets.LOGIN_BDD }}
-          PWS_BDD: ${{ secrets.PWS_BDD }}
+          API_username: ${{ env.TARGET_ENV == 'Recette2' && secrets.API_USERNAME_R2 || secrets.API_USERNAME }}
+          API_password: ${{ env.TARGET_ENV == 'Recette2' && secrets.API_PASSWORD_R2 || secrets.API_PASSWORD }}
+          LOGIN_BDD: ${{ env.TARGET_ENV == 'Recette2' && secrets.LOGIN_BDD_R2 || secrets.LOGIN_BDD }}
+          PWS_BDD: ${{ env.TARGET_ENV == 'Recette2' && secrets.PWS_BDD_R2 || secrets.PWS_BDD }}
+          API_BASE_URL: ${{ env.TARGET_ENV == 'Recette2' && secrets.API_BASE_URL_R2 || secrets.API_BASE_URL }}
           CI: true
 
       - name: Upload résultats bruts (JSON)
