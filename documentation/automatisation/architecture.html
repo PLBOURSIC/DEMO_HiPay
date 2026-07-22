@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<title>Architecture - DEMO_HiPay</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Segoe UI',sans-serif; background:#f0f4f8; padding:24px 20px; color:#1a2433; }
+  h1 { text-align:center; font-size:18px; color:#1e3a5f; margin-bottom:4px; }
+  .subtitle { text-align:center; font-size:11px; color:#6b7c95; margin-bottom:24px; }
+  .wrap { max-width:860px; margin:0 auto; }
+  .legend {
+    max-width:860px; margin:16px auto 0;
+    display:flex; gap:14px; flex-wrap:wrap; justify-content:center;
+    background:#fff; border:1px solid #dce6f0; border-radius:8px; padding:10px 16px;
+  }
+  .leg { display:flex; align-items:center; gap:8px; font-size:10px; color:#4a5a6e; }
+</style>
+</head>
+<body>
+
+<h1>Architecture &middot; DEMO_HiPay</h1>
+<p class="subtitle">Tests automatisés API de paiement &middot; CucumberJS + Node.js</p>
+
+<div class="wrap">
+<svg viewBox="0 0 830 515" xmlns="http://www.w3.org/2000/svg" style="width:100%;display:block;">
+  <defs>
+    <filter id="sh" x="-8%" y="-8%" width="116%" height="116%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#1e3a5f" flood-opacity="0.09"/>
+    </filter>
+    <marker id="mB" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0,1 L9,5 L0,9 Z" fill="#3b82f6"/>
+    </marker>
+    <marker id="mO" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0,1 L9,5 L0,9 Z" fill="#ea580c"/>
+    </marker>
+    <marker id="mY" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0,1 L9,5 L0,9 Z" fill="#d97706"/>
+    </marker>
+    <marker id="mG" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0,1 L9,5 L0,9 Z" fill="#16a34a"/>
+    </marker>
+    <marker id="mS" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0,1 L9,5 L0,9 Z" fill="#64748b"/>
+    </marker>
+  </defs>
+
+  <!-- ================================================================
+       BLOCS
+  ================================================================ -->
+
+  <!-- B1: CI/CD GitHub Actions (haut, centre) -->
+  <rect x="270" y="15" width="290" height="58" rx="10"
+        fill="#fce7f3" stroke="#f9a8d4" stroke-width="1.5" filter="url(#sh)"/>
+  <text x="415" y="33" text-anchor="middle"
+        font-family="Segoe UI,sans-serif" font-size="8.5" font-weight="700"
+        fill="#9d174d" letter-spacing="1.2">CI/CD · GITHUB ACTIONS</text>
+  <text x="415" y="48" text-anchor="middle"
+        font-family="Segoe UI,sans-serif" font-size="10.5" fill="#be185d">cucumber-tests · publish-report</text>
+  <text x="415" y="63" text-anchor="middle"
+        font-family="Segoe UI,sans-serif" font-size="9" fill="#9d174d">.github/workflows/ci.yml · schedule / push / workflow_dispatch</text>
+
+  <!-- B2: FEATURES Gherkin (centre, rang 2) -->
+  <rect x="240" y="125" width="350" height="68" rx="10"
+        fill="#eff6ff" stroke="#93c5fd" stroke-width="1.5" filter="url(#sh)"/>
+  <text x="415" y="144" text-anchor="middle"
+        font-family="Segoe UI,sans-serif" font-size="8.5" font-weight="700"
+        fill="#1d4ed8" letter-spacing="1.2">FEATURES · GHERKIN BDD</text>
+  <text x="415" y="160" text-anchor="middle"
+        font-family="Segoe UI,sans-serif" font-size="10.5" fill="#1e40af">Scénarios de test en langage naturel</text>
+  <text x="415" y="175" text-anchor="middle"
+        font-family="Segoe UI,sans-serif" font-size="9" fill="#3b82f6">cas_nominal_OK · authentification_KO · @smoke @regression @CNP</text>
+
+  <!-- B3: DATA & JDD (gauche, rang 3) -->
+  <rect x="10" y="265" width="222" height="78" rx="10"
+        fill="#fff7ed" stroke="#fed7aa" stroke-width="1.5" filter="url(#sh)"/>
+  <text x="121" y="284" text-anchor="middle"
+        font-family="Segoe UI,sans-serif" font-size="8.5" font-weight="700"
+        fill="#c2410c" letter-spacing="1.2">DATA &amp; JDD</text>
+  <text x="121" y="300" text-anchor="middle"
+        font-family="Segoe UI,sans-serif" font-size="10.5" fill="#9a3412">Jeux de données de test</text>
+  <text x="121" y="315" text-anchor="middle"
+        font-family="Segoe UI,sans-serif" font-size="9" fill="#ea580c">data/create_order.json</text>
+  <text x="121" y="329" text-anchor="middle"
+        font-family="Segoe UI,sans-serif" font-size="9" fill="#fed7aa">jdd.js · génération order_id</text>
+
+  <!-- B4: STEP DEFINITIONS (centre, rang 3) -->
+  <rect x="252" y="265" width="326" height="78" rx="10"
+        fill="#f5f3ff" stroke="#c4b5fd" stroke-width="1.5" filter="url(#sh)"/>
+  <text x="415" y="284" text-anchor="middle"
+        font-family="Segoe UI,sans-serif" font-size="8.5" font-weight="700"
+        fill="#7c3aed" letter-spacing="1.2">STEP DEFINITIONS</text>
+  <text x="415" y="300" text-anchor="middle"
+        font-family="Segoe UI,sans-serif" font-size="10.5" fill="#6d28d9">Implémentation JavaScript des steps</text>
+  <text x="415" y="315" text-anchor="middle"
+        font-family="Segoe UI,sans-serif" font-size="9" fill="#8b5cf6">create_order · authentification · bdd_request</text>
+  <text x="415" y="329" text-anchor="middle"
+        font-family="Segoe UI,sans-serif" font-size="9" fill="#c4b5fd">hook.js (BeforeAll / AfterAll) · support/parameter_types</text>
+
+  <!-- B5: CONFIGURATION & ENV (droite, rang 3) -->
+  <rect x="598" y="265" width="222" height="78" rx="10"
+        fill="#fefce8" stroke="#fde047" stroke-width="1.5" filter="url(#sh)"/>
+  <text x="709" y="284" text-anchor="middle"
+        font-family="Segoe UI,sans-serif" font-size="8.5" font-weight="700"
+        fill="#a16207" letter-spacing="1.2">CONFIGURATION &amp; ENV</text>
+  <text x="709" y="300" text-anchor="middle"
+        font-family="Segoe UI,sans-serif" font-size="10.5" fill="#854d0e">Credentials API · Pool PostgreSQL</text>
+  <text x="709" y="315" text-anchor="middle"
+        font-family="Segoe UI,sans-serif" font-size="9" fill="#ca8a04">environment/Connexion_param.js</text>
+  <text x="709" y="329" text-anchor="middle"
+        font-family="Segoe UI,sans-serif" font-size="9" fill="#fde047">.env · Secrets GitHub Actions</text>
+
+  <!-- B6: RAPPORTS (bas gauche) -->
+  <rect x="10" y="413" width="228" height="80" rx="10"
+        fill="#f0fdf4" stroke="#86efac" stroke-width="1.5" filter="url(#sh)"/>
+  <text x="124" y="432" text-anchor="middle"
+        font-family="Segoe UI,sans-serif" font-size="8.5" font-weight="700"
+        fill="#166534" letter-spacing="1.2">RAPPORTS</text>
+  <text x="124" y="448" text-anchor="middle"
+        font-family="Segoe UI,sans-serif" font-size="10.5" fill="#15803d">Rapport HTML post-tests</text>
+  <text x="124" y="463" text-anchor="middle"
+        font-family="Segoe UI,sans-serif" font-size="9" fill="#16a34a">reports/generate-report.js</text>
+  <text x="124" y="478" text-anchor="middle"
+        font-family="Segoe UI,sans-serif" font-size="9" fill="#86efac">cucumber-report.html · artifact CI</text>
+
+  <!-- B7: SYSTÈMES EXTERNES (bas, centre-droite) -->
+  <rect x="258" y="413" width="562" height="80" rx="10"
+        fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5" filter="url(#sh)"/>
+  <text x="539" y="432" text-anchor="middle"
+        font-family="Segoe UI,sans-serif" font-size="8.5" font-weight="700"
+        fill="#475569" letter-spacing="1.2">SYSTÈMES EXTERNES</text>
+  <!-- API HiPay REST -->
+  <rect x="268" y="440" width="248" height="42" rx="6"
+        fill="#dbeafe" stroke="#93c5fd" stroke-width="1"/>
+  <text x="392" y="457" text-anchor="middle"
+        font-family="Segoe UI,sans-serif" font-size="10" fill="#1e40af">API HiPay REST</text>
+  <text x="392" y="472" text-anchor="middle"
+        font-family="Segoe UI,sans-serif" font-size="8.5" fill="#3b82f6">POST /v1/connector/order · auth Basic</text>
+  <!-- PostgreSQL -->
+  <rect x="528" y="440" width="282" height="42" rx="6"
+        fill="#dcfce7" stroke="#86efac" stroke-width="1"/>
+  <text x="669" y="457" text-anchor="middle"
+        font-family="Segoe UI,sans-serif" font-size="10" fill="#166534">PostgreSQL · bdd_HiPay</text>
+  <text x="669" y="472" text-anchor="middle"
+        font-family="Segoe UI,sans-serif" font-size="8.5" fill="#16a34a">orders · notifications (vérif. &amp; purge)</text>
+
+  <!-- ================================================================
+       FLÈCHES / CONNEXIONS
+  ================================================================ -->
+
+  <!-- A1: CI/CD ──► FEATURES (vertical, plein) -->
+  <path d="M 415,73 L 415,125"
+        stroke="#3b82f6" stroke-width="2" fill="none" marker-end="url(#mB)"/>
+  <rect x="424" y="88" width="66" height="16" rx="3" fill="#eff6ff" opacity="0.92"/>
+  <text x="457" y="100" text-anchor="middle"
+        font-family="Segoe UI,sans-serif" font-size="9" fill="#3b82f6" font-weight="600">déclenche</text>
+
+  <!-- A2: FEATURES ··► DATA (courbe gauche, tiret) -->
+  <path d="M 290,193 C 240,213 175,248 121,265"
+        stroke="#ea580c" stroke-width="1.5" fill="none"
+        stroke-dasharray="5,3" marker-end="url(#mO)"/>
+  <rect x="170" y="217" width="70" height="16" rx="3" fill="#fff7ed" opacity="0.92"/>
+  <text x="205" y="229" text-anchor="middle"
+        font-family="Segoe UI,sans-serif" font-size="9" fill="#ea580c" font-weight="600">lit données</text>
+
+  <!-- A3: FEATURES ··► STEP DEFS (vertical, tiret) -->
+  <path d="M 415,193 L 415,265"
+        stroke="#3b82f6" stroke-width="1.5" fill="none"
+        stroke-dasharray="5,3" marker-end="url(#mB)"/>
+  <rect x="358" y="216" width="115" height="16" rx="3" fill="#f5f3ff" opacity="0.92"/>
+  <text x="415" y="228" text-anchor="middle"
+        font-family="Segoe UI,sans-serif" font-size="9" fill="#3b82f6" font-weight="600">implémentées par</text>
+
+  <!-- A4: FEATURES ··► CONFIG (courbe droite, tiret) -->
+  <path d="M 540,193 C 590,213 650,248 709,265"
+        stroke="#d97706" stroke-width="1.5" fill="none"
+        stroke-dasharray="5,3" marker-end="url(#mY)"/>
+  <rect x="585" y="217" width="46" height="16" rx="3" fill="#fefce8" opacity="0.92"/>
+  <text x="608" y="229" text-anchor="middle"
+        font-family="Segoe UI,sans-serif" font-size="9" fill="#d97706" font-weight="600">utilise</text>
+
+  <!-- A5: STEP DEFS ──► RAPPORTS (courbe bas-gauche, plein) -->
+  <path d="M 326,343 C 272,376 210,400 170,413"
+        stroke="#16a34a" stroke-width="2" fill="none" marker-end="url(#mG)"/>
+  <rect x="215" y="370" width="88" height="16" rx="3" fill="#f0fdf4" opacity="0.92"/>
+  <text x="259" y="382" text-anchor="middle"
+        font-family="Segoe UI,sans-serif" font-size="9" fill="#16a34a" font-weight="600">génère rapport</text>
+
+  <!-- A6: STEP DEFS ──► SYSTÈMES EXT (vertical, plein) -->
+  <path d="M 415,343 L 415,413"
+        stroke="#64748b" stroke-width="1.5" fill="none" marker-end="url(#mS)"/>
+  <rect x="420" y="366" width="46" height="16" rx="3" fill="#f8fafc" opacity="0.92"/>
+  <text x="443" y="378" text-anchor="middle"
+        font-family="Segoe UI,sans-serif" font-size="9" fill="#64748b" font-weight="600">appelle</text>
+
+</svg>
+</div>
+
+<!-- LÉGENDE -->
+<div class="legend">
+  <div class="leg">
+    <svg width="34" height="12" xmlns="http://www.w3.org/2000/svg">
+      <line x1="2" y1="6" x2="26" y2="6" stroke="#3b82f6" stroke-width="2"/>
+      <polygon points="26,3 32,6 26,9" fill="#3b82f6"/>
+    </svg>
+    Déclenchement
+  </div>
+  <div class="leg">
+    <svg width="34" height="12" xmlns="http://www.w3.org/2000/svg">
+      <line x1="2" y1="6" x2="26" y2="6" stroke="#3b82f6" stroke-width="1.5" stroke-dasharray="4,2"/>
+      <polygon points="26,3 32,6 26,9" fill="#3b82f6"/>
+    </svg>
+    Implémentation steps
+  </div>
+  <div class="leg">
+    <svg width="34" height="12" xmlns="http://www.w3.org/2000/svg">
+      <line x1="2" y1="6" x2="26" y2="6" stroke="#ea580c" stroke-width="1.5" stroke-dasharray="4,2"/>
+      <polygon points="26,3 32,6 26,9" fill="#ea580c"/>
+    </svg>
+    Lecture données / JDD
+  </div>
+  <div class="leg">
+    <svg width="34" height="12" xmlns="http://www.w3.org/2000/svg">
+      <line x1="2" y1="6" x2="26" y2="6" stroke="#d97706" stroke-width="1.5" stroke-dasharray="4,2"/>
+      <polygon points="26,3 32,6 26,9" fill="#d97706"/>
+    </svg>
+    Configuration / credentials
+  </div>
+  <div class="leg">
+    <svg width="34" height="12" xmlns="http://www.w3.org/2000/svg">
+      <line x1="2" y1="6" x2="26" y2="6" stroke="#16a34a" stroke-width="2"/>
+      <polygon points="26,3 32,6 26,9" fill="#16a34a"/>
+    </svg>
+    Génération rapport
+  </div>
+  <div class="leg">
+    <svg width="34" height="12" xmlns="http://www.w3.org/2000/svg">
+      <line x1="2" y1="6" x2="26" y2="6" stroke="#64748b" stroke-width="1.5"/>
+      <polygon points="26,3 32,6 26,9" fill="#64748b"/>
+    </svg>
+    Appel systèmes externes
+  </div>
+</div>
+
+</body>
+</html>

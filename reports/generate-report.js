@@ -12,10 +12,10 @@ const options = {
   launchReport: !process.env.CI,             // N'ouvre pas le navigateur en CI
   metadata: {
     'App Version': '1.0.0',
-    'Test Environment': 'LOCAL',
+    'Test Environment': 'RECETTE 1',
     'Browser': 'N/A',
     'Platform': 'Linux',
-    'Executed': 'Local'
+    'Executed': 'Runner GitHub'
   }
 };
 

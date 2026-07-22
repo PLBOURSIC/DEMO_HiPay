@@ -18,6 +18,7 @@ Pour aller plus loin = test de charge (gatling)
 
 Pk on a pas les identifiants de la CB ? 
 
+_____________________________________________________________________________________________________________________
 
 Cas manuel : 
 
@@ -125,14 +126,17 @@ On doit obtenir un 500
 
 22.01.CP.Invalid credential / autorisation manquante 
 
-
+_________________________________________________________________________________________________________________________
 
 LE GET  : 
 
 Répond Ok code 200 ou rien
 
+__________________________________________________________________________________________________________________________
 
 Test AUTO : on peut passer par les runners de GitHub qui ont Node.js nativement 
+
+
 jobs:
   cucumber-tests:
     runs-on: ubuntu-latest  # Runner GitHub avec Node.js dispo nativement
@@ -142,6 +146,11 @@ si on veut aller plus loin en testant l'API avec son code on peut dockeriser ave
 
 Comment fonctionne CucumberJS ?
 CucumberJS est un framework de tests BDD (Behavior Driven Development). L'idée est d'écrire les tests dans un langage naturel compréhensible par tout le monde (développeurs, testeurs, métier).
+
+
+
+
+
 
 
 📌 Les mots-clés Gherkin
