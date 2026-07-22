@@ -4,8 +4,7 @@
 > **Authentification** : Basic Auth (`Authorization: Basic <base64(login:password)>`)  
 > **Format** : JSON (`Content-Type: application/json`)
 >
-> **Légende** : `CP` = Cas Passant · `CNP` = Cas Non Passant  
-> **Statuts** : ⬜ Non joué · ✅ Passé · ❌ Échoué · ⏭ Ignoré
+> **Légende** : `CP` = Cas Passant · `CNP` = Cas Non Passant 
 
 ---
 
