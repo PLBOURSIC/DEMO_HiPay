@@ -12,7 +12,7 @@
 ## Sommaire
 
 | # | Identifiant | Intitulé | Type |
-|---|---|---|---|---|
+|---|---|---|---|
 | 1 | 01.01.CP | Cas nominal — 1 seul article | CP |
 | 2 | 01.02.CP | Cas nominal — données minimales (sans panier) | CP |
 | 3 | 02.01.CP | Plusieurs articles dans le panier | CP |
