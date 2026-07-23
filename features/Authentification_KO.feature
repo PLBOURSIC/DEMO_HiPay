@@ -13,4 +13,3 @@ Feature: Authentification KO
     Given je construit le body de paiement avec les informations de l'article
     When je soumets la requête de création d'ordre de paiement avec une authorization invalide présente true
     Then je reçois un statut 401 et un message d'erreur "invalid credentials"
-

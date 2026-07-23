@@ -1,9 +1,9 @@
-const { Given, When, Then, After } = require('@cucumber/cucumber');
+const { Given, When, Then } = require('@cucumber/cucumber');
 const { expect } = require('chai');
-const { API_CREDENTIAL, pool } = require('../../environment/Connexion_param.js');
 const fs = require('fs');
 const path = require('path');
 const { order_id } = require('./jdd.js');
+const HiPayClient = require('./clientAPI.js');
 
 // Correspond à : Given je construit le body de paiement avec les informations de l'article
 Given('je construit le body de paiement avec les informations de l\'article', function () {
@@ -15,48 +15,18 @@ Given('je construit le body de paiement avec les informations de l\'article', fu
 
 // Correspond à : je soumets la requête de création d'ordre de paiement
 When('je soumets la requête de création d\'ordre de paiement', async function () {
-  const url = 'https://cloudrun-api-yugcnet4yq-ew.a.run.app/v1/connector/order';
-  const bodyStr = JSON.stringify(this.body, null, 2);
-
-  // pour créer le curl qui sera affiché dans le rapport, on enlève le header Authorization pour ne pas exposer les credentials dans le rapport : 
-  const curlCmd = [
-    `curl -X POST "${url}"`,
-    `  -H "Content-Type: application/json"`,
-    `  -H "accept: application/json"`,
-    `  -d '${JSON.stringify(this.body)}'`
-  ].join(' \\\n');
-
+  const client = new HiPayClient();
   try {
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'accept': 'application/json',
-        'Authorization': `Basic ${API_CREDENTIAL()}`
-      },
-      body: bodyStr
-    });
-    const data = await response.json();
-    this.statusCode = response.status;
-    this.response = data;
+    const { statusCode, body, curlCmd } = await client.createOrder(this.body);
+    this.statusCode = statusCode;
+    this.response = body;
     this.orderId = this.body.order.order_id;
 
-    // ── Logs console ──────────────────────────────
-    console.log('\n── CURL ──────────────────────────────────────');
-    console.log(curlCmd);
-    console.log(`\n── ORDER_ID : ${this.orderId} ───────────────`);
-    console.log(`\n── RESPONSE (${this.statusCode}) ─────────────`);
-    console.log(JSON.stringify(data, null, 2));
-
-    // ── Attachements rapport HTML ──────────────────
-    this.attach(`CURL envoyé :\n\n${curlCmd}`, 'text/plain');
-    this.attach(`ORDER_ID créé : ${this.orderId}`, 'text/plain');
-    this.attach(JSON.stringify(data, null, 2), 'application/json');
+    // pour imprimer le curl dans le rapport HTML et les logs console
+    HiPayClient.report(this, { statusCode, body, curlCmd, orderId: this.orderId });
 
   } catch (error) {
-    this.attach(`CURL envoyé :\n\n${curlCmd}`, 'text/plain');
-    this.attach(`ERREUR : ${error.message}`, 'text/plain');
-    console.error('Erreur :', error);
+    HiPayClient.reportError(this, { error });
     throw error;
   }
 });

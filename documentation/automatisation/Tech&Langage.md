@@ -92,9 +92,18 @@ Sur Windows, l'opérateur `||` utilisé pour forcer la génération du rapport a
 
 Le fichier `environment/Connexion_param.js` centralise les accès techniques utilisés par les steps :
 - `API_CREDENTIAL` construit le header Basic Auth de l'API à partir de `API_username` et `API_password` (encodage Base64).
+- `BASE_API_URL` porte l'URL de l'API testée, surchargeable via la variable d'environnement `API_BASE_URL` (utilisé par la CI pour cibler `Recette1`/`Recette2`).
 - `pool` initialise une connexion BDD mutualisée (package `pg`) avec `LOGIN_BDD` et `PWS_BDD`.
 
 Permet d'éviter de dupliquer la logique de connexion dans chaque step.
+
+### Client API centralisé (`clientAPI.js` / `HiPayClient`)
+
+Les fichiers de steps qui appellent l'API (`create_order.steps.js`, `authentification.steps.js`, etc.) passent par la classe `HiPayClient` (`features/step_definitions/clientAPI.js`).
+
+- `createOrder(payload, options)` : envoie un `POST /v1/connector/order` avec le body fourni. Les options `withAuthorization` (boolean) et `tokenOverride` (string) permettent de piloter la présence/validité du header `Authorization`, nécessaire pour les scénarios KO (header absent, credentials invalides).
+- `_request(endpoint, options)` : construit les headers, effectue le `fetch`, parse la réponse JSON et génère la commande `curl` équivalente (avec l'`Authorization` masqué en `Basic ***`) pour l'affichage en rapport/logs.
+- `report(world, { statusCode, body, curlCmd, orderId })` et `reportError(world, { curlCmd, error })` : méthodes statiques appelées à la volée depuis les steps pour factoriser les logs console et les attachements du rapport HTML (`world.attach`). `world` correspond au contexte Cucumber (`this` du step), nécessaire car `attach` n'existe que dans ce contexte et n'est pas accessible depuis le client lui-même.
 
 ### Gestion des secrets
 

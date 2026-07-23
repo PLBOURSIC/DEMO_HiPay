@@ -77,8 +77,6 @@ Permet de lancer le workflow à la demande depuis l'onglet **Actions** de GitHub
 | `env` | choice (`Recette1` / `Recette2`) | `Recette1` | Environnement cible — sélectionne automatiquement les credentials API et BDD correspondants |
 | `feature` | string | _(vide)_ | Nom du fichier `.feature` à cibler (ex. : `cas_nominal_OK.feature`). Si vide : toutes les features sont jouées |
 
-> Lors d'un déclenchement automatique (`schedule`, `push`, `pull_request`), l'environnement par défaut est **Recette1**.
-
 ---
 
 ## Job 1 — `cucumber-tests`

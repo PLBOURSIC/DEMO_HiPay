@@ -182,6 +182,6 @@ quels sont les cas de test éligible au test auto :
 
 22.01.CP.Invalid credential / autorisation manquante 
 
-
+--> car ils sont le fonctionnement de base de l'API et certainement ceux qui répondent aux exigences. Ce sont ces tests qui doivent être rejoué à chaque livraison de l'API
 
 

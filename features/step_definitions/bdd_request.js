@@ -9,7 +9,7 @@ const checkDatabaseHealth = async function () {
   let client;
     try {
         client = await pool.connect()
-        const result = await client.query('SELECT 1'); // Exécute une requête simple pour vérifier la connexion
+        const result = await client.query('SELECT 1'); // Exécute une requête simple pour vérifier la connexion uniquement si on est sur une database PostgreSQL
         console.log('✅ BDD opérationnelle');
         return {
             healthCheck: 'OK'
@@ -28,17 +28,15 @@ const checkDatabaseHealth = async function () {
 
 // Correspond à : Then je vérifie que l'order est enregistré en bdd
 Then('l\'enregistrement avec l\'order_id existe en base', async function () {
-  if (process.env.CI) {
-    console.log('⚠️  Vérification BDD ignorée en CI (config fictive).');
-    return;
-  }
-
   const orderId = this.response.order.order_id;
-  const result = await pool.query(
+  // Implémentez ici la vérification que l'ordre est bien enregistré en base de données
+  // Vous pouvez utiliser une requête SQL ou une API pour vérifier la présence de l'ordre dans la base de données
+   const result = await pool.query(
     'SELECT * FROM orders WHERE order_id = $1',
     [orderId]
   );
   expect(result.rows.length).to.be.greaterThan(0);
+
 });
 
  // Correspond à : And les notifications ont été reçues sur l'url notify

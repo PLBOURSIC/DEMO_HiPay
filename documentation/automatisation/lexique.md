@@ -13,7 +13,6 @@ leur rôle, leur implémentation et leur usage dans les fichiers `.feature`.
 |---|---|---|
 | `Given` | [je construit le body de paiement avec les informations de l'article](#given--je-construit-le-body-de-paiement-avec-les-informations-de-larticle) | `create_order.steps.js` |
 | `When` | [je soumets la requête de création d'ordre de paiement](#when--je-soumets-la-requête-de-création-dordre-de-paiement) | `create_order.steps.js` |
-| `When` | [je soumets la requête de création d'ordre de paiement sans header authorization](#when--je-soumets-la-requête-de-création-dordre-de-paiement-sans-header-authorization) | `create_order.steps.js` |
 | `When` | [je soumets la requête de création d'ordre de paiement avec une authorization invalide présente {boolean}](#when--je-soumets-la-requête-de-création-dordre-de-paiement-avec-une-authorization-invalide-présente-boolean) | `authentification.steps.js` |
 | `Then` | [je reçois un statut 200 et un identifiant d'ordre](#then--je-reçois-un-statut-200-et-un-identifiant-dordre) | `create_order.steps.js` |
 | `Then` | [je reçois un statut {int} et un message d'erreur {string}](#then--je-reçois-un-statut-int-et-un-message-derreur-string) | `authentification.steps.js` |
@@ -50,15 +49,16 @@ Initialise le body de la requête en chargeant le fichier de données de référ
 
 ### Description
 
-Envoie le body préparé en `Given` vers l'endpoint de création d'ordre avec des **credentials valides**.
+Envoie le body préparé en `Given` vers l'endpoint de création d'ordre avec des **credentials valides**, via le client centralisé `HiPayClient` (`clientAPI.js`).
 
 ### Ce que fait le step
 
-1. Construit l'URL : `POST https://cloudrun-api-yugcnet4yq-ew.a.run.app/v1/connector/order`
-2. Ajoute les headers : `Content-Type: application/json`, `accept: application/json`, `Authorization: Basic <token>`
-3. Le token est généré via `API_CREDENTIAL()` — encode `login:password` en Base64 depuis les variables d'environnement
+1. Instancie `new HiPayClient()` (URL et token par défaut pris depuis `Connexion_param.js`)
+2. Appelle `client.createOrder(this.body)`, qui envoie un `POST` sur `/v1/connector/order` avec les headers `Content-Type`, `accept` et `Authorization: Basic <token>`
+3. Récupère `{ statusCode, body, curlCmd }` retourné par le client
 4. Stocke dans le contexte : `this.statusCode`, `this.response`, `this.orderId`
-5. Attache au rapport HTML : la commande `curl` équivalente (sans credentials), l'`order_id` et la réponse JSON
+5. Appelle `HiPayClient.report(this, { statusCode, body, curlCmd, orderId })` qui se charge des logs console **et** des attachements du rapport HTML (curl avec `Authorization` masqué, `order_id`, réponse JSON)
+6. En cas d'erreur réseau, `HiPayClient.reportError(this, { error })` attache le message d'erreur au rapport avant de la relancer
 
 ---
 
@@ -68,16 +68,18 @@ Envoie le body préparé en `Given` vers l'endpoint de création d'ordre avec de
 
 ### Description
 
-Envoie la requête avec un header `Authorization` dont la présence et la validité dépendent du paramètre `{boolean}`.
+Envoie la requête via `HiPayClient.createOrder`, en pilotant la présence et la validité du header `Authorization` grâce aux options `withAuthorization` / `tokenOverride`.
 
 ### Ce que fait le step
 
-| Valeur du `{boolean}` | Comportement |
-|---|---|
-| `true` | Envoie le header `Authorization: Basic <credentials_erronés>` (login/password invalides encodés en Base64) |
-| `false` | N'envoie **pas** le header `Authorization` |
+| Valeur du `{boolean}` | Options passées au client | Comportement |
+|---|---|---|
+| `true` | `withAuthorization: true, tokenOverride: API_CREDENTIAL_ERRONNE()` | Envoie le header `Authorization: Basic <credentials_erronés>` |
+| `false` | `withAuthorization: false` | N'envoie **pas** le header `Authorization` |
 
 Les credentials erronés sont fournis par `jdd.js > API_CREDENTIAL_ERRONNE()` qui encode `invalid_login:invalid_password`.
+
+Le statut, la réponse et le curl (avec `Authorization` masqué si présent) sont ensuite journalisés/attachés via `HiPayClient.report(this, ...)`, comme pour le scénario nominal.
 
 > **Note** : CucumberJS convertit automatiquement `true` / `false` (sans guillemets dans le fichier `.feature`) en booléen JavaScript.
 
@@ -293,6 +295,19 @@ Retourne le token Basic Auth valide depuis les variables d'environnement `.env`.
 ```js
 Buffer.from(`${process.env.API_username}:${process.env.API_password}`).toString('base64')
 ```
+
+### `clientAPI.js > HiPayClient`
+
+Client API centralisé utilisé par `create_order.steps.js` et `authentification.steps.js` pour éviter de dupliquer la logique d'appel HTTP.
+
+| Méthode | Rôle |
+|---|---|
+| `constructor(baseUrl, token)` | Valeurs par défaut prises dans `Connexion_param.js` (`BASE_API_URL`, `API_CREDENTIAL()`) |
+| `_request(endpoint, options)` | Construit les headers (`withAuthorization` / `tokenOverride` en option), appelle `fetch`, parse le JSON et génère la commande curl associée |
+| `createOrder(payload, options)` | Méthode métier — `POST /v1/connector/order` avec le `payload` fourni |
+| `_buildCurl(method, url, headers, body)` | Génère la commande `curl` équivalente à la requête envoyée, en masquant l'`Authorization` (`Basic ***`) |
+| `report(world, { statusCode, body, curlCmd, orderId })` | Statique — logge dans la console **et** attache (`world.attach`) le curl, l'`order_id` et la réponse au rapport HTML. `world` est le contexte Cucumber (`this` du step) |
+| `reportError(world, { curlCmd, error })` | Statique — attache l'erreur au rapport et la logge en console en cas d'échec de la requête |
 
 ### `hook.js > Hooks globaux`
 
