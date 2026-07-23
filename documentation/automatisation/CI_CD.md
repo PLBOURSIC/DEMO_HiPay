@@ -41,17 +41,17 @@ flowchart TD
 
 Le workflow est déclenché par :
 
-- `schedule` : tous les jours à `09:00 UTC`
+- `schedule` : tous les jours à `07:00 UTC` (09:00 heure de Paris en UTC+2)
 - `push` : branches `main`, `develop`
 - `pull_request` : branche `main`
 - `workflow_dispatch` : lancement manuel
 
-Paramètres `workflow_dispatch` :
+Paramètres workflow_dispatch :
 
 | Paramètre | Valeurs | Défaut | Rôle |
 |---|---|---|---|
 | `env` | `Recette1`, `Recette2` | `Recette1` | Sélection de l'environnement GitHub |
-| `mode` | `demo`, `cas_passant`, `cas_non_passant`, `non_regression` | `non_regression` | Commande de test à exécuter |
+| mode | all, demo, cas_passant, cas_non_passant, non_regression | non_regression | Sélection de campagne |
 | `feature` | nom de feature | vide | Si rempli, prioritaire sur `mode` |
 
 ## Logique d'exécution
@@ -61,21 +61,29 @@ Règle de priorité :
 1. si `feature` est renseigné, la commande est forcée sur cette feature
 2. sinon, la commande est choisie selon `mode`
 
-Commande appliquée si `feature` est renseigné :
+Commande appliquée si feature est renseigné :
 
-`node features/support-scripts/run-tests.js features/<feature>`
+node features/support-scripts/run-tests.js features/<feature>
 
-Mapping `mode` -> script npm :
+Mapping mode -> script npm (job non-régression) :
 
 | Mode | Script |
 |---|---|
-| `demo` | `npm run test:demo` |
-| `cas_passant` | `npm run test:CP` |
-| `cas_non_passant` | `npm run test:CNP` |
-| `non_regression` | `npm run test:non_regression` |
-| `non_regression` | `npm run test:regression` |
+| cas_passant | npm run test:CP |
+| cas_non_passant | npm run test:CNP |
+| non_regression (par défaut) | npm run test:non_regression --if-present \|\| npm run test:regression |
+| all | npm run test:non_regression --if-present \|\| npm run test:regression |
+| demo | Job non-régression ignoré |
 
-deux script qui peuvent jouer "non_regression" car on a un bug sur un ancien script présent dans le GitHub runtime qui est joué à la place du test:non_regression
+Mapping mode -> script npm (job démo) :
+
+| Mode | Script |
+|---|---|
+| demo | npm run test:demo |
+| all | npm run test:demo |
+| cas_passant, cas_non_passant, non_regression | Job démo ignoré |
+
+Note: le fallback non-régression vers test:regression protège les anciens contextes où ce nom de script est encore utilisé.
 
 ## Jobs détaillés
 
@@ -83,7 +91,10 @@ deux script qui peuvent jouer "non_regression" car on a un bug sur un ancien scr
 
 - dépendances: aucune
 - environnement: `${{ github.event.inputs.env || 'Recette1' }}`
-- commande par défaut (hors `workflow_dispatch`): `npm run test:non_regression`
+- condition d'exécution:
+  - événements automatiques: toujours exécuté
+  - workflow_dispatch: exécuté sauf si mode=demo
+- commande par défaut: npm run test:non_regression --if-present || npm run test:regression
 - artefacts produits:
   - `cucumber-json-non-regression-<run_number>`
   - `cucumber-report-non-regression-<run_number>`
@@ -92,7 +103,10 @@ deux script qui peuvent jouer "non_regression" car on a un bug sur un ancien scr
 
 - dépendances: aucune
 - environnement: `${{ github.event.inputs.env || 'Recette1' }}`
-- commande par défaut (hors `workflow_dispatch`): `npm run test:demo`
+- condition d'exécution:
+  - événements automatiques: toujours exécuté
+  - workflow_dispatch: exécuté si mode=demo ou mode=all
+- commande par défaut: npm run test:demo
 - artefacts produits:
   - `cucumber-json-demo-<run_number>`
   - `cucumber-report-demo-<run_number>`
@@ -111,7 +125,17 @@ deux script qui peuvent jouer "non_regression" car on a un bug sur un ancien scr
 
 ## Comportement important
 
-Le paramètre manuel `mode` est partagé par les deux jobs de test. Donc, en `workflow_dispatch`, si tu choisis `mode=demo`, les deux jobs exécuteront `test:demo` (sauf si `feature` est fournie). C'est le comportement actuel du YAML.
+Le mode manuel contrôle quels jobs s'exécutent:
+
+| mode | Test_non_regression | Test_Demo |
+|---|---|---|
+| demo | ignoré | exécuté |
+| cas_passant | exécuté | ignoré |
+| cas_non_passant | exécuté | ignoré |
+| non_regression | exécuté | ignoré |
+| all | exécuté | exécuté |
+
+Si feature est renseigné, chaque job actif exécute exactement la feature demandée.
 
 ## Runner de tests
 
