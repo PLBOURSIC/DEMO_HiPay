@@ -192,7 +192,7 @@ needs: cucumber-tests
 if: always() && needs.cucumber-tests.result != 'skipped'
 ```
 
-Ce job s'exécute **toujours** (même si `cucumber-tests` a échoué), sauf s'il a été ignoré (via `skip_tests=true`).
+Ce job s'exécute **toujours** (même si `cucumber-tests` a échoué), sauf si le job `cucumber-tests` lui-même a été marqué `skipped` par GitHub Actions — ce qui n'arrive pas dans la configuration actuelle puisque ce job n'a pas de condition `if`.
 
 ### Étapes détaillées
 
