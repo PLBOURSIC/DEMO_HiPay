@@ -36,9 +36,9 @@ DEMO_Hipay/
 ├── features/
 │   ├── *.feature                  ← Scénarios en Gherkin
 │   ├── step_definitions/          ← Implémentation JS des phrases Gherkin
-│   ├── support/
-│   │   └── parameter_types.js     ← Types de paramètres personnalisés ({boolean})
+│   │   └── clientAPI.js           ← Client API centralisé (HiPayClient)
 │   └── support-scripts/
+│       ├── parameter_types.js     ← Types de paramètres personnalisés ({boolean}), chargé explicitement par cucumber.js
 │       └── run-tests.js           ← Runner cross-platform (contournement Windows)
 ├── environment/
 │   └── Connexion_param.js         ← Credentials API + pool PostgreSQL

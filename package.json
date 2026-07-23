@@ -6,7 +6,7 @@
     "test": "node features/support-scripts/run-tests.js",
     "report": "node reports/generate-report.js",
     "test:cas_nominal_OK": "node features/support-scripts/run-tests.js features/cas_nominal_OK.feature",
-    "test:authentification_KO": "node features/support-scripts/run-tests.js features/Authentification_KO.feature",
+    "test:authentification_KO": "node features/support-scripts/run-tests.js features/authentification_KO.feature",
     "test:all": "node features/support-scripts/run-tests.js features/",
     "test:smoke": "node features/support-scripts/run-tests.js --tags @smoke"
   },

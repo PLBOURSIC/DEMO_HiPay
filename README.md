@@ -33,7 +33,7 @@ npm run report                  # génération du rapport HTML
 Pour plus de détails, consulter les fichiers dans [`documentation/`](documentation/) :
 
 - [documentation/automatisation/CI_CD.md](documentation/automatisation/CI_CD.md) — Pipeline CI/CD
-- [documentation/automatisation/langage.md](documentation/automatisation/langage.md) — Choix du langage et du framework
+- [documentation/automatisation/Tech&Langage.md](documentation/automatisation/Tech&Langage.md) — Choix du langage et du framework
 - [documentation/automatisation/lexique.md](documentation/automatisation/lexique.md) — Lexique des termes métier
 - [documentation/testing_strategy/automation_test_plan.md](documentation/testing_strategy/automation_test_plan.md) — Plan de test automatisé
 - [documentation/testing_strategy/manual_test_plan.md](documentation/testing_strategy/manual_test_plan.md) — Plan de test manuel
