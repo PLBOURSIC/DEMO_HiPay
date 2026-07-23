@@ -98,7 +98,7 @@ Vérifie qu'une création d'ordre s'est bien déroulée en validant le statut HT
 | Assertion | Valeur attendue |
 |---|---|
 | `this.statusCode` | `200` |
-| `response.order_id` | Identique à l'`order_id` envoyé dans la requête |
+| `response.order.order_id` | Identique à l'`order_id` envoyé dans la requête |
 | `response.paymentStatus` | `"Success"` |
 
 ---
@@ -136,30 +136,38 @@ Vérifie qu'une requête non autorisée retourne le bon statut HTTP et le bon me
 
 ### Description
 
-Effectue une validation complète et détaillée du body de réponse.
+Effectue une validation complète et détaillée du **body de réponse retourné par l'API**.
+
+Le step s'appuie d'abord sur `this.response` pour contrôler le **contrat de réponse**, puis compare certains champs avec `this.body` pour vérifier que l'API a bien recopié ou restitué les données attendues de la requête.
 
 ### Assertions effectuées
 
 | # | Champ | Règle |
 |---|---|---|
-| 1 | `response.receipt` | Présent et encodé en **Base64** (regex `/^[A-Za-z0-9+/]+={0,2}$/`) |
-| 2 | `body.order.price` | Présent |
-| 3 | `body.order.price.amount` | De type `number`, entier (`Number.isInteger`), `≥ 0` |
-| 4 | `body.order.price.currency` | Présent, format **ISO 4217** (`/^[A-Z]{3}$/`), valeur `"EUR"` |
-| 5 | `body.order.basket` | Présent, de type `array`, non vide |
-| 6 | `basket[n].product_reference` | Présent (obligatoire) |
-| 7 | `basket[n].name` | Présent (obligatoire) |
-| 8 | `basket[n].type` | Présent (obligatoire) |
-| 9 | `basket[n].quantity` | Présent (obligatoire) |
-| 10 | `basket[n].unit_price` | Présent (obligatoire) |
-| 11 | `basket[n].discount` | Présent, valeur `≤ 0` |
-| 12 | `basket[n].total_amount` | `= unit_price × quantity − \|discount\|` (arrondi à 2 décimales) |
-| 13 | `pos_technical_info.device_information` | Présent |
-| 14 | `device_information.serial_number` | Présent, string non vide |
-| 15 | `device_information.manufacturer` | Présent, string non vide |
-| 16 | `terminal_transaction_display` | Présent |
-| 17 | `terminal_transaction_display.protocol` | Présent, parmi `["ConcertV3.1", "AppNepting", "ConcertV3.2"]` |
-| 18 | `terminal_transaction_display.force_authorization` | Présent, de type `boolean` |
+| 1 | `response.paymentStatus` | Présent, de type `string`, non vide |
+| 2 | `response.receipt` | Présent et encodé en **Base64** (regex `/^[A-Za-z0-9+/]+={0,2}$/`) |
+| 3 | `response.errorData` | Présent, de type `object` |
+| 4 | `response.order.order_id` | Présent et identique à l'`order_id` envoyé |
+| 5 | `response.order.transaction_type` | Présent et identique à la requête |
+| 6 | `response.order.price.amount` | Présent, de type `number`, entier (`Number.isInteger`), `≥ 0`, identique à la requête |
+| 7 | `response.order.price.currency` | Présent, format **ISO 4217** (`/^[A-Z]{3}$/`), identique à la requête |
+| 8 | `response.order.basket` | Présent, de type `array`, non vide, même taille que la requête |
+| 9 | `response.order.basket[n].product_reference` | Présent et identique à la requête |
+| 10 | `response.order.basket[n].name` | Présent et identique à la requête |
+| 11 | `response.order.basket[n].type` | Présent et identique à la requête |
+| 12 | `response.order.basket[n].quantity` | Présent et identique à la requête |
+| 13 | `response.order.basket[n].unit_price` | Présent et identique à la requête |
+| 14 | `response.order.basket[n].discount` | Présent, valeur `≤ 0`, identique à la requête |
+| 15 | `response.order.basket[n].total_amount` | `= unit_price × quantity − \|discount\|` (arrondi à 2 décimales), identique à la requête |
+| 16 | `response.customer` | Présent, de type `object` |
+| 17 | `response.customer.customer_id` / `phone` / `first_name` / `last_name` | Présents et identiques à la requête |
+| 18 | `response.customer.email` | Présent, de type `string`, non vide |
+| 19 | `response.technical_pos_info` ou `response.pos_technical_info` | Présent |
+| 20 | `device_information.serial_number` | Présent, string non vide, identique à la requête |
+| 21 | `device_information.manufacturer` | Présent, string non vide, identique à la requête |
+| 22 | `terminal_transaction_display.protocol` | Présent, parmi `["ConcertV3.1", "AppNepting", "ConcertV3.2"]`, identique à la requête |
+| 23 | `terminal_transaction_display.force_authorization` | Présent, de type `boolean`, identique à la requête |
+| 24 | `notify_url` | Présent et identique à la requête |
 
 ---
 

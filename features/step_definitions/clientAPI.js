@@ -31,6 +31,7 @@ class HiPayClient {
 
     // création de l'url complète pour l'appel fetch et récupération de la réponse et du body JSON
     const url = `${this.baseUrl}${endpoint}`;
+    this.url_order = url; // pour pouvoir la réutiliser
     const response = await fetch(url, { ...fetchOptions, headers });
     const body = await response.json().catch(() => null);
 
@@ -38,35 +39,29 @@ class HiPayClient {
       statusCode: response.status,
       body,
       // curl affiché dans le rapport/logs, sans exposer les credentials, fetchOptions.method par défaut = POST, headers et body sont passés à la fonction _buildCurl pour construire le curl complet
-      curlCmd: HiPayClient._buildCurl(fetchOptions.method || 'POST', url, headers, fetchOptions.body)
+      curlCmd: _buildCurl(fetchOptions.method || 'POST', url, headers, fetchOptions.body)
     };
-  }
-
-  // creation de la fonction pour définir le curlCmd, on lui passe en option le method, l'url, les headers et le body
-  static _buildCurl(method, url, headers, body) {
-
-    // pour cacher le token dans le curlCmd, on clone les headers et on remplace Authorization par 'Basic ***' si présent
-    const safeHeaders = { ...headers };
-    if (safeHeaders.Authorization) safeHeaders.Authorization = 'Basic ***';
-
-    return [
-      `curl -X ${method} "${url}"`,
-      ...Object.entries(safeHeaders).map(([key, value]) => `  -H "${key}: ${value}"`),
-      body ? `  -d '${body}'` : null
-    ].filter(Boolean).join(' \\\n');
   }
 
   // ─── Logs console + attachements rapport HTML, appelés à la volée depuis les steps ───
   // world = le "this" du step (contexte Cucumber), nécessaire pour appeler world.attach(...)
-  static report(world, { statusCode, body, curlCmd, orderId }) {
+  static report(world, {
+    statusCode,
+    body,
+    curlCmd,
+    orderId,
+    requestLabel = 'CURL envoyé',
+    responseLabel = 'Réponse obtenue'
+  }) {
     console.log('\n── CURL ──────────────────────────────────────');
     console.log(curlCmd);
     console.log(`\n── ORDER_ID : ${orderId} ───────────────`);
     console.log(`\n── RESPONSE (${statusCode}) ─────────────`);
     console.log(JSON.stringify(body, null, 2));
 
-    world.attach(`CURL envoyé :\n\n${curlCmd}`, 'text/plain');
-    world.attach(`ORDER_ID créé : ${orderId}`, 'text/plain');
+    world.attach(`${requestLabel} :\n\n${curlCmd}`, 'text/plain');
+    world.attach(`ORDER_ID créé : ${orderId || 'N/A'}`, 'text/plain');
+    world.attach(responseLabel, 'text/plain');
     world.attach(JSON.stringify(body, null, 2), 'application/json');
   }
 
@@ -88,4 +83,19 @@ class HiPayClient {
   }
 }
 
-module.exports = HiPayClient;
+
+// creation de la fonction pour définir le curlCmd, on lui passe en option le method, l'url, les headers et le body
+const _buildCurl = (method, url, headers, body) => {
+
+// pour cacher le token dans le curlCmd, on clone les headers et on remplace Authorization par 'Basic ***' si présent
+const safeHeaders = { ...headers };
+if (safeHeaders.Authorization) safeHeaders.Authorization = 'Basic ***';
+
+return [
+    `curl -X ${method} "${url}"`,
+    ...Object.entries(safeHeaders).map(([key, value]) => `  -H "${key}: ${value}"`),
+    body ? `  -d '${body}'` : null
+].filter(Boolean).join(' \\\n');
+}
+
+module.exports = { HiPayClient, _buildCurl };

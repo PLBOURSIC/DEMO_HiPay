@@ -8,12 +8,13 @@
 const { spawnSync } = require('child_process');
 const path = require('path');
 
-const featureArg = process.argv[2] || '';
+const userArgs = process.argv.slice(2);
+const hasFormatArg = userArgs.includes('--format') || userArgs.includes('-f');
 
 const cucumberArgs = [
   'cucumber-js',
-  ...(featureArg ? [featureArg] : []),
-  '--format', 'json:reports/cucumber.json'
+  ...userArgs,
+  ...(hasFormatArg ? [] : ['--format', 'json:reports/cucumber.json'])
 ];
 
 const result = spawnSync('npx', cucumberArgs, {

@@ -4,11 +4,42 @@
 
 Valider à chaque livraison les parcours essentiels de l'API HiPay (création d'ordre, authentification, cohérence fonctionnelle), avec des scénarios stables et rejouables en CI.
 
+Le plan distingue volontairement les campagnes de **démonstration technique** des campagnes de **validation réelle**, afin de ne pas mélanger absence de prérequis et défaut produit.
+
 ## Principes
 
 - Tous les cas ne sont pas éligibles à l'automatisation.
 - L'automatisation couvre la non-régression fonctionnelle de base.
 - Les cas exploratoires, limites complexes ou dépendants d'un contexte externe restent en manuel.
+- Un run sans credentials API ne qualifie pas le produit : il qualifie la capacité du framework à journaliser un échec attendu.
+
+## Couches de couverture
+
+### 1. Contrat API
+
+Vérifier les éléments transport et contrat de service :
+
+- code HTTP attendu
+- structure de la réponse
+- présence des champs obligatoires
+- messages d'erreur fonctionnels et techniques
+
+### 2. Cohérence métier
+
+Vérifier la logique métier minimale portée par le payload et la réponse :
+
+- présence et cohérence de `order_id`
+- statut de paiement (`Success` / `Failed`)
+- cohérence de montant, devise et panier
+- unicité et intégrité des données clefs
+
+### 3. Intégration
+
+Vérifier les dépendances externes lorsqu'elles sont accessibles :
+
+- persistance BDD
+- notifications
+- nettoyage des données de test
 
 ## Cas retenus pour l'automatisation
 
@@ -37,11 +68,23 @@ Pour les cas automatisés, vérifier selon le scénario :
 - persistance BDD lorsque applicable
 - notifications lorsque applicable
 
+## Modes d'exécution
+
+| Mode | Finalité | Attendu |
+|---|---|---|
+| `demo` | Jouer les scénarios taggés `@demo` (KO auth + simulation) | Le framework doit produire un rapport lisible sans dépendre d'un accès complet à l'environnement |
+| `non_regression` | Jouer les scénarios taggés `@non_regression` | Vérification de la non-régression fonctionnelle |
+| `CP` | Jouer les scénarios taggés `@CP` | Validation des cas passants |
+| `CNP` | Jouer les scénarios taggés `@CNP` | Validation des cas non passants |
+
 ## Exécution - voir page sur automatisation
 
-- Exécution locale via npm scripts.
-- Exécution CI quotidienne et sur push/PR.
-- Rapport HTML généré systématiquement.
+- Exécution locale via npm scripts selon le mode choisi.
+- Exécution CI quotidienne, sur push/PR et en lancement manuel.
+- Rapport HTML généré systématiquement, y compris en cas d'échec attendu.
+- CI séparée en deux campagnes avec artefacts distincts :
+   - `non_regression` -> `cucumber-report-non-regression-<run_number>`
+   - `demo` -> `cucumber-report-demo-<run_number>`
 
 ## Rôle des hooks
 

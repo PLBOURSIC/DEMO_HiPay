@@ -1,7 +1,7 @@
 const { When, Then } = require('@cucumber/cucumber');
 const { expect } = require('chai');
 const { API_CREDENTIAL_ERRONNE } = require('./jdd.js');
-const HiPayClient = require('./clientAPI.js');
+const { HiPayClient } = require('./clientAPI.js');
 
 // Correspond à : je soumets la requête de création d'ordre de paiement avec une authorization invalide présente {boolean}
 // Dans la feature, le step s'utilise avec true ou false sans guillemets (Cucumber les convertit automatiquement en booléen)

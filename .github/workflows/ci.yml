@@ -12,6 +12,16 @@ on:
         options:
           - 'Recette1'
           - 'Recette2'
+      mode:
+        description: 'Mode d''exécution'
+        required: false
+        default: 'non_regression'
+        type: choice
+        options:
+          - 'demo'
+          - 'cas_passant'
+          - 'cas_non_passant'
+          - 'non_regression'
       feature:
         description: 'Feature à jouer (laisser vide = toutes)'
         required: false
@@ -28,12 +38,14 @@ on:
     branches: [main]
 
 jobs:
-  cucumber-tests:
+  Test_non_regression:
     runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.env || 'Recette1' }}
 
-    # Environnement cible (Recette1 par défaut si déclenchement automatique)
+    # Environnement cible et mode (valeurs par défaut pour les déclenchements automatiques)
     env:
       TARGET_ENV: ${{ github.event.inputs.env || 'Recette1' }}
+      TARGET_MODE: ${{ github.event.inputs.mode || 'non_regression' }}
 
     steps:
       - name: Checkout du code
@@ -48,29 +60,66 @@ jobs:
       - name: Installation des dépendances
         run: npm ci
 
+      - name: Résoudre le mode d'exécution
+        run: |
+          FEATURE_INPUT="${{ github.event.inputs.feature }}"
+          MODE_INPUT="${TARGET_MODE}"
+
+          if [ -n "$FEATURE_INPUT" ]; then
+            echo "EXECUTION_MODE=custom-feature" >> $GITHUB_ENV
+            echo "EXECUTION_COMMAND=node features/support-scripts/run-tests.js features/$FEATURE_INPUT" >> $GITHUB_ENV
+            echo "EXECUTION_LABEL=Feature imposée : $FEATURE_INPUT" >> $GITHUB_ENV
+          else
+            case "$MODE_INPUT" in
+              demo)
+                echo "EXECUTION_MODE=demo" >> $GITHUB_ENV
+                echo "EXECUTION_COMMAND=npm run test:demo" >> $GITHUB_ENV
+                echo "EXECUTION_LABEL=Mode démo sans secrets valides" >> $GITHUB_ENV
+                ;;
+              cas_passant)
+                echo "EXECUTION_MODE=cas_passant" >> $GITHUB_ENV
+                echo "EXECUTION_COMMAND=npm run test:CP" >> $GITHUB_ENV
+                echo "EXECUTION_LABEL=Cas passant" >> $GITHUB_ENV
+                ;;
+              cas_non_passant)
+                echo "EXECUTION_MODE=cas_non_passant" >> $GITHUB_ENV
+                echo "EXECUTION_COMMAND=npm run test:CNP" >> $GITHUB_ENV
+                echo "EXECUTION_LABEL=Cas non passant" >> $GITHUB_ENV
+                ;;
+              *)
+                echo "EXECUTION_MODE=non_regression" >> $GITHUB_ENV
+                echo "EXECUTION_COMMAND=npm run test:non_regression" >> $GITHUB_ENV
+                echo "EXECUTION_LABEL=Validation fonctionnelle nominale" >> $GITHUB_ENV
+                ;;
+            esac
+          fi
+
       - name: Lancer les tests CucumberJS
         # Utilise run-tests.js dans tous les cas : il génère toujours le rapport,
         # même si des tests échouent (exit code non-zéro), puis propage le code de sortie.
         run: |
-          FEATURE="${{ github.event.inputs.feature }}"
-          if [ -n "$FEATURE" ]; then
-            node features/support-scripts/run-tests.js "features/$FEATURE"
-          else
-            npm test
-          fi
+          echo "Commande exécutée : $EXECUTION_COMMAND"
+          eval "$EXECUTION_COMMAND"
         env:
-          API_username: ${{ env.TARGET_ENV == 'Recette2' && secrets.API_USERNAME_R2 || secrets.API_USERNAME }}
-          API_password: ${{ env.TARGET_ENV == 'Recette2' && secrets.API_PASSWORD_R2 || secrets.API_PASSWORD }}
-          LOGIN_BDD: ${{ env.TARGET_ENV == 'Recette2' && secrets.LOGIN_BDD_R2 || secrets.LOGIN_BDD }}
-          PWS_BDD: ${{ env.TARGET_ENV == 'Recette2' && secrets.PWS_BDD_R2 || secrets.PWS_BDD }}
-          API_BASE_URL: ${{ env.TARGET_ENV == 'Recette2' && secrets.API_BASE_URL_R2 || secrets.API_BASE_URL }}
+          API_username: ${{ secrets.API_USERNAME }}
+          API_password: ${{ secrets.API_PASSWORD }}
+          LOGIN_BDD: ${{ secrets.LOGIN_BDD }}
+          PWS_BDD: ${{ secrets.PWS_BDD }}
+          API_BASE_URL: ${{ secrets.API_BASE_URL }}
           CI: true
+
+      - name: Publier un résumé d'exécution
+        if: always()
+        run: |
+          node -e "const fs=require('fs'); const path='reports/cucumber.json'; const mode=process.env.EXECUTION_MODE || process.env.TARGET_MODE || 'unknown'; const envName=process.env.TARGET_ENV || 'unknown'; const feature=process.env.GITHUB_EVENT_FEATURE || ''; const result=process.env.TEST_JOB_RESULT || ''; let scenarios=0, passed=0, failed=0, skipped=0; if (fs.existsSync(path)) { const data=JSON.parse(fs.readFileSync(path,'utf8')); for (const featureItem of data) { for (const scenario of featureItem.elements || []) { if (scenario.type !== 'scenario') continue; scenarios += 1; const statuses=(scenario.steps || []).map(step => step.result && step.result.status).filter(Boolean); if (statuses.includes('failed')) { failed += 1; } else if (statuses.every(status => status === 'skipped')) { skipped += 1; } else { passed += 1; } } } console.log('## Rapport de tests CucumberJS'); console.log(''); console.log(`- Mode : ${mode}`); console.log(`- Environnement : ${envName}`); console.log(`- Exécution : ${process.env.EXECUTION_LABEL || mode}`); console.log(`- Scénarios : ${scenarios}`); console.log(`- Succès : ${passed}`); console.log(`- Échecs : ${failed}`); console.log(`- Ignorés : ${skipped}`); if (mode === 'demo') { console.log('- Contexte : un 401 sur le parcours nominal est attendu si les credentials d\'intégration ne sont pas fournis.'); } console.log(''); console.log(`Artefact HTML : cucumber-report-${process.env.GITHUB_RUN_NUMBER}`); } else { console.log('## Rapport de tests CucumberJS'); console.log(''); console.log('- Aucun fichier reports/cucumber.json n\'a été trouvé.'); }" >> $GITHUB_STEP_SUMMARY
+        env:
+          GITHUB_EVENT_FEATURE: ${{ github.event.inputs.feature }}
 
       - name: Upload résultats bruts (JSON)
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: cucumber-json-${{ github.run_number }}
+          name: cucumber-json-non-regression-${{ github.run_number }}
           path: reports/cucumber.json
           retention-days: 7
 
@@ -78,42 +127,170 @@ jobs:
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: cucumber-report-${{ github.run_number }}
+          name: cucumber-report-non-regression-${{ github.run_number }}
           path: reports/cucumber-report.html
           retention-days: 30
 
-  publish-report:
+  Test_Demo:
     runs-on: ubuntu-latest
-    needs: cucumber-tests
+    environment: ${{ github.event.inputs.env || 'Recette1' }}
+
+    # Environnement cible et mode (valeurs par défaut pour les déclenchements automatiques)
+    env:
+      TARGET_ENV: ${{ github.event.inputs.env || 'Recette1' }}
+      TARGET_MODE: ${{ github.event.inputs.mode || 'demo' }}
+
+    steps:
+      - name: Checkout du code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
+
+      - name: Installation des dépendances
+        run: npm ci
+
+      - name: Résoudre le mode d'exécution
+        run: |
+          FEATURE_INPUT="${{ github.event.inputs.feature }}"
+          MODE_INPUT="${TARGET_MODE}"
+
+          if [ -n "$FEATURE_INPUT" ]; then
+            echo "EXECUTION_MODE=custom-feature" >> $GITHUB_ENV
+            echo "EXECUTION_COMMAND=node features/support-scripts/run-tests.js features/$FEATURE_INPUT" >> $GITHUB_ENV
+            echo "EXECUTION_LABEL=Feature imposée : $FEATURE_INPUT" >> $GITHUB_ENV
+          else
+            case "$MODE_INPUT" in
+              demo)
+                echo "EXECUTION_MODE=demo" >> $GITHUB_ENV
+                echo "EXECUTION_COMMAND=npm run test:demo" >> $GITHUB_ENV
+                echo "EXECUTION_LABEL=Mode démo sans secrets valides" >> $GITHUB_ENV
+                ;;
+              cas_passant)
+                echo "EXECUTION_MODE=cas_passant" >> $GITHUB_ENV
+                echo "EXECUTION_COMMAND=npm run test:CP" >> $GITHUB_ENV
+                echo "EXECUTION_LABEL=Cas passant" >> $GITHUB_ENV
+                ;;
+              cas_non_passant)
+                echo "EXECUTION_MODE=cas_non_passant" >> $GITHUB_ENV
+                echo "EXECUTION_COMMAND=npm run test:CNP" >> $GITHUB_ENV
+                echo "EXECUTION_LABEL=Cas non passant" >> $GITHUB_ENV
+                ;;
+              *)
+                echo "EXECUTION_MODE=non_regression" >> $GITHUB_ENV
+                echo "EXECUTION_COMMAND=npm run test:non_regression" >> $GITHUB_ENV
+                echo "EXECUTION_LABEL=Validation fonctionnelle nominale" >> $GITHUB_ENV
+                ;;
+            esac
+          fi
+
+      - name: Lancer les tests CucumberJS
+        # Utilise run-tests.js dans tous les cas : il génère toujours le rapport,
+        # même si des tests échouent (exit code non-zéro), puis propage le code de sortie.
+        run: |
+          echo "Commande exécutée : $EXECUTION_COMMAND"
+          eval "$EXECUTION_COMMAND"
+        env:
+          API_username: ${{ secrets.API_USERNAME }}
+          API_password: ${{ secrets.API_PASSWORD }}
+          LOGIN_BDD: ${{ secrets.LOGIN_BDD }}
+          PWS_BDD: ${{ secrets.PWS_BDD }}
+          API_BASE_URL: ${{ secrets.API_BASE_URL }}
+          CI: true
+
+      - name: Publier un résumé d'exécution
+        if: always()
+        run: |
+          node -e "const fs=require('fs'); const path='reports/cucumber.json'; const mode=process.env.EXECUTION_MODE || process.env.TARGET_MODE || 'unknown'; const envName=process.env.TARGET_ENV || 'unknown'; const feature=process.env.GITHUB_EVENT_FEATURE || ''; const result=process.env.TEST_JOB_RESULT || ''; let scenarios=0, passed=0, failed=0, skipped=0; if (fs.existsSync(path)) { const data=JSON.parse(fs.readFileSync(path,'utf8')); for (const featureItem of data) { for (const scenario of featureItem.elements || []) { if (scenario.type !== 'scenario') continue; scenarios += 1; const statuses=(scenario.steps || []).map(step => step.result && step.result.status).filter(Boolean); if (statuses.includes('failed')) { failed += 1; } else if (statuses.every(status => status === 'skipped')) { skipped += 1; } else { passed += 1; } } } console.log('## Rapport de tests CucumberJS'); console.log(''); console.log(`- Mode : ${mode}`); console.log(`- Environnement : ${envName}`); console.log(`- Exécution : ${process.env.EXECUTION_LABEL || mode}`); console.log(`- Scénarios : ${scenarios}`); console.log(`- Succès : ${passed}`); console.log(`- Échecs : ${failed}`); console.log(`- Ignorés : ${skipped}`); if (mode === 'demo') { console.log('- Contexte : un 401 sur le parcours nominal est attendu si les credentials d\'intégration ne sont pas fournis.'); } console.log(''); console.log(`Artefact HTML : cucumber-report-${process.env.GITHUB_RUN_NUMBER}`); } else { console.log('## Rapport de tests CucumberJS'); console.log(''); console.log('- Aucun fichier reports/cucumber.json n\'a été trouvé.'); }" >> $GITHUB_STEP_SUMMARY
+        env:
+          GITHUB_EVENT_FEATURE: ${{ github.event.inputs.feature }}
+
+      - name: Upload résultats bruts (JSON)
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: cucumber-json-demo-${{ github.run_number }}
+          path: reports/cucumber.json
+          retention-days: 7
+
+      - name: Upload rapport HTML
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: cucumber-report-demo-${{ github.run_number }}
+          path: reports/cucumber-report.html
+          retention-days: 30
+
+
+  publish-report-non_regression:
+    runs-on: ubuntu-latest
+    needs: Test_non_regression
     # Toujours exécuté (même si les tests échouent), sauf si le job principal a été ignoré
-    if: always() && needs.cucumber-tests.result != 'skipped'
+    if: always() && needs.Test_non_regression.result != 'skipped'
 
     steps:
       - name: Télécharger le rapport HTML
         uses: actions/download-artifact@v4
         with:
-          name: cucumber-report-${{ github.run_number }}
+          name: cucumber-report-non-regression-${{ github.run_number }}
           path: rapport/
 
       - name: Publier le rapport dans le résumé du workflow
-            # GITHUB_STEP_SUMMARY permet d'accéder au résumé du workflow (affiché dans l'onglet Actions > Résumé)
         run: |
-          echo "## 📊 Rapport de tests CucumberJS" >> $GITHUB_STEP_SUMMARY
+          echo "## Artefacts de campagne" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Run :** \`#${{ github.run_number }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Run :** \\`#${{ github.run_number }}\\`" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "Le rapport HTML complet est disponible dans les **Artifacts** de ce workflow :" >> $GITHUB_STEP_SUMMARY
-          echo "➡️ \`cucumber-report-${{ github.run_number }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "➡️ \`cucumber-report-non-regression-${{ github.run_number }}\`" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          if [ "${{ needs.cucumber-tests.result }}" = "success" ]; then
-            echo "✅ Tous les tests ont réussi." >> $GITHUB_STEP_SUMMARY
+          if [ "${{ needs.Test_non_regression.result }}" = "success" ]; then
+            echo "✅ Le job de tests est sorti en succès." >> $GITHUB_STEP_SUMMARY
           else
-            echo "❌ Des tests ont échoué — consultez le rapport pour les détails." >> $GITHUB_STEP_SUMMARY
+            echo "❌ Le job de tests contient au moins un échec ou un prérequis manquant." >> $GITHUB_STEP_SUMMARY
           fi
 
       - name: Upload rapport HTML (depuis publish-report)
         uses: actions/upload-artifact@v4
         with:
-          name: rapport-final-${{ github.run_number }}
+          name: rapport-final-non-regression-${{ github.run_number }}
+          path: rapport/cucumber-report.html
+          retention-days: 30
+
+  publish-report-demo:
+    runs-on: ubuntu-latest
+    needs: Test_Demo
+    # Toujours exécuté (même si les tests échouent), sauf si le job principal a été ignoré
+    if: always() && needs.Test_Demo.result != 'skipped'
+
+    steps:
+      - name: Télécharger le rapport HTML
+        uses: actions/download-artifact@v4
+        with:
+          name: cucumber-report-demo-${{ github.run_number }}
+          path: rapport/
+
+      - name: Publier le rapport dans le résumé du workflow
+        run: |
+          echo "## Artefacts de campagne" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Run :** \\`#${{ github.run_number }}\\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Le rapport HTML complet est disponible dans les **Artifacts** de ce workflow :" >> $GITHUB_STEP_SUMMARY
+          echo "➡️ \`cucumber-report-demo-${{ github.run_number }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ needs.Test_Demo.result }}" = "success" ]; then
+            echo "✅ Le job de tests est sorti en succès." >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ Le job de tests contient au moins un échec ou un prérequis manquant." >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Upload rapport HTML (depuis publish-report)
+        uses: actions/upload-artifact@v4
+        with:
+          name: rapport-final-demo-${{ github.run_number }}
           path: rapport/cucumber-report.html
           retention-days: 30

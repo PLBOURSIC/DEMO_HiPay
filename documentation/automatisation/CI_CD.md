@@ -1,254 +1,136 @@
 ﻿# CI/CD — Pipeline GitHub Actions
 
-Ce document décrit le fonctionnement du fichier [`.github/workflows/ci.yml`](../../../.github/workflows/ci.yml).
+Ce document décrit le workflow [`.github/workflows/ci.yml`](../../../.github/workflows/ci.yml).
 
----
+## Objectif
 
-## Vue d'ensemble
+Le pipeline lance deux campagnes de tests en parallèle logique :
 
+1. campagne **non-régression**
+2. campagne **démo**
+
+Chaque campagne produit ses propres artefacts pour éviter tout mélange de rapports.
+
+## Schéma d'architecture
+
+```mermaid
+flowchart TD
+    A[Triggers: schedule / push / PR / workflow_dispatch] --> B[Test_non_regression]
+    A --> C[Test_Demo]
+
+    B --> B1[npm ci]
+    B1 --> B2[Resolve mode/feature]
+    B2 --> B3[run-tests.js]
+    B3 --> B4[cucumber.json + cucumber-report.html]
+    B4 --> B5[Artifacts: cucumber-json-non-regression-*\ncucumber-report-non-regression-*]
+
+    C --> C1[npm ci]
+    C1 --> C2[Resolve mode/feature]
+    C2 --> C3[run-tests.js]
+    C3 --> C4[cucumber.json + cucumber-report.html]
+    C4 --> C5[Artifacts: cucumber-json-demo-*\ncucumber-report-demo-*]
+
+    B5 --> D[publish-report-non_regression]
+    C5 --> E[publish-report-demo]
+
+    D --> F[Artifact final: rapport-final-non-regression-*]
+    E --> G[Artifact final: rapport-final-demo-*]
 ```
-┌─────────────────────────────────────────────────────────┐
-│              Déclencheurs du workflow                   │
-│  schedule (9h/jour) │ push/PR │ workflow_dispatch       │
-└──────────────────────────────┬──────────────────────────┘
-                               │
-                    ┌──────────▼──────────┐
-                    │   cucumber-tests    │  Job 1
-                    │  ubuntu-latest      │
-                    │                     │
-                    │ 1. Checkout         │
-                    │ 2. Setup Node 24    │
-                    │ 3. npm ci           │
-                    │ 4. Run tests        │
-                    │ 5. Upload JSON (7j) │
-                    │ 6. Upload HTML (30j)│
-                    └──────────┬──────────┘
-                               │ needs + if: always()
-                    ┌──────────▼──────────┐
-                    │   publish-report    │  Job 2
-                    │  ubuntu-latest      │
-                    │                     │
-                    │ 1. Download HTML    │
-                    │ 2. Résumé workflow  │
-                    │ 3. Upload final     │
-                    └─────────────────────┘
-```
-
----
 
 ## Déclencheurs
 
-Le workflow se déclenche sur **4 événements** :
+Le workflow est déclenché par :
 
-### 1. Planification automatique — `schedule`
+- `schedule` : tous les jours à `09:00 UTC`
+- `push` : branches `main`, `develop`
+- `pull_request` : branche `main`
+- `workflow_dispatch` : lancement manuel
 
-```yaml
-schedule:
-  - cron: '0 7 * * *'
-```
+Paramètres `workflow_dispatch` :
 
-Lance les tests **tous les jours à 9h00 (heure de Paris)**.  
-`07:00 UTC` correspond à `09:00 UTC+2` (heure d'été française).
-
-### 2. Push sur une branche — `push`
-
-```yaml
-push:
-  branches: [main, develop]
-```
-
-Déclenché automatiquement à chaque commit poussé sur `main` ou `develop`.
-
-### 3. Pull Request — `pull_request`
-
-```yaml
-pull_request:
-  branches: [main]
-```
-
-Permet de valider les tests **avant** la fusion du code.
-
-### 4. Déclenchement manuel — `workflow_dispatch`
-
-Permet de lancer le workflow à la demande depuis l'onglet **Actions** de GitHub avec deux paramètres :
-
-| Paramètre | Type | Défaut | Description |
+| Paramètre | Valeurs | Défaut | Rôle |
 |---|---|---|---|
-| `env` | choice (`Recette1` / `Recette2`) | `Recette1` | Environnement cible — sélectionne automatiquement les credentials API et BDD correspondants |
-| `feature` | string | _(vide)_ | Nom du fichier `.feature` à cibler (ex. : `cas_nominal_OK.feature`). Si vide : toutes les features sont jouées |
+| `env` | `Recette1`, `Recette2` | `Recette1` | Sélection de l'environnement GitHub |
+| `mode` | `demo`, `cas_passant`, `cas_non_passant`, `non_regression` | `non_regression` | Commande de test à exécuter |
+| `feature` | nom de feature | vide | Si rempli, prioritaire sur `mode` |
 
----
+## Logique d'exécution
 
-## Job 1 — `cucumber-tests`
+Règle de priorité :
 
-S'exécute sur `ubuntu-latest`.
+1. si `feature` est renseigné, la commande est forcée sur cette feature
+2. sinon, la commande est choisie selon `mode`
 
-**Environnement cible :**
+Commande appliquée si `feature` est renseigné :
 
-```yaml
-env:
-  TARGET_ENV: ${{ github.event.inputs.env || 'Recette1' }}
-```
+`node features/support-scripts/run-tests.js features/<feature>`
 
-La variable `TARGET_ENV` est positionnée en début de job. Elle vaut la valeur choisie manuellement, ou `Recette1` par défaut pour tous les déclenchements automatiques.
+Mapping `mode` -> script npm :
 
-### Étapes détaillées
-
-#### Checkout du code
-
-```yaml
-uses: actions/checkout@v4
-```
-
-Clone le dépôt dans l'environnement d'exécution GitHub.
-
-#### Setup Node.js
-
-```yaml
-uses: actions/setup-node@v4
-with:
-  node-version: '24'
-  cache: 'npm'
-```
-
-Installe Node.js 24. Le cache `npm` est activé pour accélérer les exécutions suivantes en réutilisant le dossier `node_modules` si `package-lock.json` n'a pas changé.
-
-#### Installation des dépendances
-
-```yaml
-run: npm ci
-```
-
-`npm ci` (contrairement à `npm install`) installe **exactement** les versions définies dans `package-lock.json`.  
-Cela garantit la reproductibilité entre les environnements local et CI.
-
-#### Lancement des tests
-
-```yaml
-run: |
-  FEATURE="${{ github.event.inputs.feature }}"
-  if [ -n "$FEATURE" ]; then
-    node features/support-scripts/run-tests.js "features/$FEATURE"
-  else
-    npm test
-  fi
-```
-
-Si une feature est spécifiée en paramètre (`workflow_dispatch`), seule cette feature est exécutée.  
-Sinon, `npm test` joue toutes les features (`features/` entier).
-
-Le runner `run-tests.js` est utilisé à la place de `cucumber-js` directement pour deux raisons :
-1. Il génère le rapport HTML **même si des tests échouent** (exit code non-zéro)
-2. Il propage ensuite le code de sortie pour que la CI détecte les échecs
-
-#### Variables d'environnement injectées
-
-```yaml
-env:
-  API_username:  ${{ env.TARGET_ENV == 'Recette2' && secrets.API_USERNAME_R2  || secrets.API_USERNAME }}
-  API_password:  ${{ env.TARGET_ENV == 'Recette2' && secrets.API_PASSWORD_R2  || secrets.API_PASSWORD }}
-  LOGIN_BDD:     ${{ env.TARGET_ENV == 'Recette2' && secrets.LOGIN_BDD_R2     || secrets.LOGIN_BDD }}
-  PWS_BDD:       ${{ env.TARGET_ENV == 'Recette2' && secrets.PWS_BDD_R2       || secrets.PWS_BDD }}
-  API_BASE_URL:  ${{ env.TARGET_ENV == 'Recette2' && secrets.API_BASE_URL_R2  || secrets.API_BASE_URL }}
-  CI: true
-```
-
-Les variables sont sélectionnées dynamiquement selon `TARGET_ENV` :
-
-| Variable | Recette1 | Recette2 |
-|---|---|---|
-| `API_username` | `secrets.API_USERNAME` | `secrets.API_USERNAME_R2` |
-| `API_password` | `secrets.API_PASSWORD` | `secrets.API_PASSWORD_R2` |
-| `LOGIN_BDD` | `secrets.LOGIN_BDD` | `secrets.LOGIN_BDD_R2` |
-| `PWS_BDD` | `secrets.PWS_BDD` | `secrets.PWS_BDD_R2` |
-| `API_BASE_URL` | `secrets.API_BASE_URL` | `secrets.API_BASE_URL_R2` |
-| `CI` | `true` (fixe) | `true` (fixe) |
-
-> Les secrets sont configurés dans **Settings > Secrets and variables > Actions** du dépôt GitHub.  
-> Ils ne sont jamais visibles dans les logs ni dans le code.
-
-#### Upload des artefacts
-
-Deux artefacts sont uploadés après les tests, **même en cas d'échec** (`if: always()`) :
-
-| Artefact | Fichier | Rétention |
-|---|---|---|
-| `cucumber-json-<run_number>` | `reports/cucumber.json` | 7 jours |
-| `cucumber-report-<run_number>` | `reports/cucumber-report.html` | 30 jours |
-
-Le JSON brut est utile pour une analyse programmatique des résultats.  
-Le rapport HTML est l'artefact principal pour la lecture humaine.
-
----
-
-## Job 2 — `publish-report`
-
-S'exécute sur `ubuntu-latest`, **après** `cucumber-tests`.
-
-**Condition d'exécution :**
-
-```yaml
-needs: cucumber-tests
-if: always() && needs.cucumber-tests.result != 'skipped'
-```
-
-Ce job s'exécute **toujours** (même si `cucumber-tests` a échoué), sauf si le job `cucumber-tests` lui-même a été marqué `skipped` par GitHub Actions — ce qui n'arrive pas dans la configuration actuelle puisque ce job n'a pas de condition `if`.
-
-### Étapes détaillées
-
-#### Téléchargement du rapport HTML
-
-```yaml
-uses: actions/download-artifact@v4
-with:
-  name: cucumber-report-<run_number>
-  path: rapport/
-```
-
-Récupère le rapport HTML généré par le job 1.
-
-#### Résumé du workflow (`GITHUB_STEP_SUMMARY`)
-
-Publie un résumé dans l'onglet **Actions > Résumé** du workflow GitHub :
-
-- Numéro du run
-- Lien vers l'artefact du rapport HTML
-- Statut global : ✅ tous les tests ont réussi / ❌ des tests ont échoué
-
-Ce résumé est visible directement dans l'interface GitHub sans télécharger l'artefact.
-
-#### Re-upload du rapport final
-
-```yaml
-name: rapport-final-<run_number>
-path: rapport/cucumber-report.html
-retention-days: 30
-```
-
-Publie une copie du rapport sous le nom `rapport-final-<run_number>` pour le distinguer de l'artefact intermédiaire.
-
----
-
-## Configurer les secrets GitHub
-
-Pour que le pipeline fonctionne, les secrets suivants doivent être créés dans **Settings > Secrets and variables > Actions** :
-
-### Recette 1 (défaut)
-
-| Nom du secret | Valeur |
+| Mode | Script |
 |---|---|
-| `API_USERNAME` | Login de l'API HiPay |
-| `API_PASSWORD` | Mot de passe de l'API HiPay |
-| `API_BASE_URL` | URL de base de l'API (ex. : `https://cloudrun-api-yugcnet4yq-ew.a.run.app`) |
-| `LOGIN_BDD` | Utilisateur PostgreSQL |
-| `PWS_BDD` | Mot de passe PostgreSQL |
+| `demo` | `npm run test:demo` |
+| `cas_passant` | `npm run test:CP` |
+| `cas_non_passant` | `npm run test:CNP` |
+| `non_regression` | `npm run test:non_regression` |
 
-### Recette 2
+## Jobs détaillés
 
-| Nom du secret | Valeur |
-|---|---|
-| `API_USERNAME_R2` | Login de l'API HiPay (Recette 2) |
-| `API_PASSWORD_R2` | Mot de passe de l'API HiPay (Recette 2) |
-| `API_BASE_URL_R2` | URL de base de l'API (Recette 2) |
-| `LOGIN_BDD_R2` | Utilisateur PostgreSQL (Recette 2) |
-| `PWS_BDD_R2` | Mot de passe PostgreSQL (Recette 2) |
+### Job `Test_non_regression`
+
+- dépendances: aucune
+- environnement: `${{ github.event.inputs.env || 'Recette1' }}`
+- commande par défaut (hors `workflow_dispatch`): `npm run test:non_regression`
+- artefacts produits:
+  - `cucumber-json-non-regression-<run_number>`
+  - `cucumber-report-non-regression-<run_number>`
+
+### Job `Test_Demo`
+
+- dépendances: aucune
+- environnement: `${{ github.event.inputs.env || 'Recette1' }}`
+- commande par défaut (hors `workflow_dispatch`): `npm run test:demo`
+- artefacts produits:
+  - `cucumber-json-demo-<run_number>`
+  - `cucumber-report-demo-<run_number>`
+
+### Job `publish-report-non_regression`
+
+- `needs: Test_non_regression`
+- télécharge `cucumber-report-non-regression-<run_number>`
+- republie `rapport-final-non-regression-<run_number>`
+
+### Job `publish-report-demo`
+
+- `needs: Test_Demo`
+- télécharge `cucumber-report-demo-<run_number>`
+- republie `rapport-final-demo-<run_number>`
+
+## Comportement important
+
+Le paramètre manuel `mode` est partagé par les deux jobs de test. Donc, en `workflow_dispatch`, si tu choisis `mode=demo`, les deux jobs exécuteront `test:demo` (sauf si `feature` est fournie). C'est le comportement actuel du YAML.
+
+## Runner de tests
+
+Le script `features/support-scripts/run-tests.js` :
+
+- transmet les arguments Cucumber (`--tags`, `--format`, feature)
+- génère le rapport HTML même en cas d'échec
+- retourne le code de sortie pour que le job soit correctement marqué en succès/échec
+
+## Secrets et environnements
+
+Les jobs lisent les secrets depuis l'environnement GitHub choisi (`Recette1` ou `Recette2`) :
+
+- `API_USERNAME`
+- `API_PASSWORD`
+- `LOGIN_BDD`
+- `PWS_BDD`
+- `API_BASE_URL`
+
+`CI=true` est injecté dans les jobs.
+
+Configuration GitHub attendue :
+
+1. créer les environnements `Recette1` et `Recette2`
+2. définir les mêmes secrets dans chaque environnement

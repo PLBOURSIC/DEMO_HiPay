@@ -1,4 +1,4 @@
-@smoke @creation_order @regression
+@smoke @non_regression @CP
 Feature: Cas nominal creation order
 
   En tant qu'utilisateur

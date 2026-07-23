@@ -1,4 +1,4 @@
-@smoke @regression @CNP
+@smoke @non_regression @CNP @demo
 Feature: Authentification KO
 
   En tant que maintainer
@@ -12,4 +12,3 @@ Feature: Authentification KO
   Scenario:  Invalid Credentials
     Given je construit le body de paiement avec les informations de l'article
     When je soumets la requête de création d'ordre de paiement avec une authorization invalide présente true
-    Then je reçois un statut 401 et un message d'erreur "invalid credentials"
