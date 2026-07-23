@@ -88,7 +88,7 @@ Le rapport est **toujours généré**, même si des tests échouent.
 
 Sur Windows, l'opérateur `||` utilisé pour forcer la génération du rapport après un échec n'est pas reconnu dans `npm scripts`. Un script Node.js dédié (`features/support-scripts/run-tests.js`) a été créé pour contourner ce problème. Il utilise `spawnSync` pour lancer CucumberJS puis appelle `generate-report.js` inconditionnellement avant de propager le code de sortie vers la CI.
 
-Le runner relaie maintenant l'ensemble des arguments passés en CLI (`process.argv.slice(2)`), ce qui permet :
+Le runner relaie l'ensemble des arguments passés (`process.argv.slice(2)`), ce qui permet :
 
 - l'utilisation fiable des tags (`--tags @demo`, `--tags @non_regression`, etc.)
 - le ciblage d'une feature spécifique

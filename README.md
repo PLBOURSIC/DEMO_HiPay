@@ -33,7 +33,7 @@ NB : le projet a d'aborde été réféchi et réalisé partiellement sans l'aide
 | `CP` | `npm run test:CP` | Exécute les scénarios taggés `@CP` (cas passants). |
 | `CNP` | `npm run test:CNP` | Exécute les scénarios taggés `@CNP` (cas non passants). |
 
-Le runner Cucumber transmet désormais correctement tous les arguments CLI (`--tags`, expression de tags, chemins de features, etc.) et génère systématiquement le rapport HTML.
+Le runner Cucumber transmet désormais correctement tous les arguments (`--tags`, expression de tags, chemins de features, etc.) et génère systématiquement le rapport HTML.
 
 ## Stratégie de validation
 
