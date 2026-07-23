@@ -73,6 +73,9 @@ Mapping `mode` -> script npm :
 | `cas_passant` | `npm run test:CP` |
 | `cas_non_passant` | `npm run test:CNP` |
 | `non_regression` | `npm run test:non_regression` |
+| `non_regression` | `npm run test:regression` |
+
+deux script qui peuvent jouer "non_regression" car on a un bug sur un ancien script présent dans le GitHub runtime qui est joué à la place du test:non_regression
 
 ## Jobs détaillés
 

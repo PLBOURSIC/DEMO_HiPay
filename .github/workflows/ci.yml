@@ -18,6 +18,7 @@ on:
         default: 'non_regression'
         type: choice
         options:
+          - 'all'
           - 'demo'
           - 'cas_passant'
           - 'cas_non_passant'
@@ -84,7 +85,7 @@ jobs:
                 ;;
               *)
                 echo "EXECUTION_MODE=non_regression" >> $GITHUB_ENV
-                echo "EXECUTION_COMMAND=npm run test:non_regression" >> $GITHUB_ENV
+                echo "EXECUTION_COMMAND=npm run test:non_regression --if-present || npm run test:regression" >> $GITHUB_ENV
                 echo "EXECUTION_LABEL=Validation fonctionnelle nominale" >> $GITHUB_ENV
                 ;;
             esac
@@ -128,7 +129,7 @@ jobs:
           retention-days: 30
 
   Test_Demo:
-    if: ${{ github.event_name != 'workflow_dispatch' || github.event.inputs.mode == 'demo' }}
+    if: ${{ github.event_name != 'workflow_dispatch' || github.event.inputs.mode == 'demo' || github.event.inputs.mode == 'all' }}
     runs-on: ubuntu-latest
     environment: ${{ github.event.inputs.env || 'Recette1' }}
 

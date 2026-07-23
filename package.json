@@ -10,7 +10,8 @@
     "test:all": "node features/support-scripts/run-tests.js features/",
     "test:smoke": "node features/support-scripts/run-tests.js --tags @smoke",
     "test:demo": "node features/support-scripts/run-tests.js --tags @demo",
-    "test:regression": "node features/support-scripts/run-tests.js --tags @regression",
+    "test:regression": "node features/support-scripts/run-tests.js --tags @non_regression",
+    "test:non_regression": "node features/support-scripts/run-tests.js --tags @non_regression",
     "test:CP": "node features/support-scripts/run-tests.js --tags @CP",
     "test:CNP": "node features/support-scripts/run-tests.js --tags @CNP"
   },
