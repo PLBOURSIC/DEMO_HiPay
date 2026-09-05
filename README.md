@@ -68,3 +68,6 @@ Pour plus de détails, consulter les fichiers dans [`documentation/`](documentat
 - [documentation/testing_strategy/automation_test_plan.md](documentation/testing_strategy/automation_test_plan.md) — Plan de test automatisé
 - [documentation/testing_strategy/manual_test_plan.md](documentation/testing_strategy/manual_test_plan.md) — Plan de test manuel
 
+
+
+<!-- Security scan triggered at 2026-09-05 07:25:01 -->
